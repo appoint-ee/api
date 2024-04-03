@@ -1,0 +1,54 @@
+### CREATE
+
+POST http://localhost:5074/Events
+Authorization: Bearer {{access_token}}
+Accept: */*
+Content-Type: application/json
+
+{
+  "summary": "string",
+  "description": "string",
+  "start": {
+    "dateTime": "2024-04-03T10:30:00.000Z",
+    "timeZone": "Europe/Zurich"
+  },
+  "end": {
+    "dateTime": "2024-04-03T20:30:00.000Z",
+    "timeZone": "Europe/Zurich"
+  }
+}
+
+### GET
+
+GET http://localhost:5074/Events
+Authorization: Bearer {{access_token}}
+
+### GET By ID
+
+GET http://localhost:5074/Events/1234567890123456789012345678
+Authorization: Bearer {{access_token}}
+
+### UPDATE
+
+PATCH http://localhost:5074/Events/1234567890123456789012345678
+Authorization: Bearer {{access_token}}
+Accept: */*
+Content-Type: application/json
+
+{
+  "summary": "string",
+  "description": "string",
+  "start": {
+    "dateTime": "2024-04-03T19:30:00.000Z",
+    "timeZone": "Europe/Zurich"
+  },
+  "end": {
+    "dateTime": "2024-04-03T20:30:00.000Z",
+    "timeZone": "Europe/Zurich"
+  }
+}
+
+### DELETE
+
+DELETE http://localhost:5074/Events/1234567890123456789012345678
+Authorization: Bearer {{access_token}}
