@@ -1,4 +1,4 @@
-name: Docker Image CI with SonarQube Analysis and Kubernetes Deployment
+name: AppointeeApi
 
 on:
   push:
