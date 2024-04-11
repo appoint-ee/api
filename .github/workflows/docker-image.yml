@@ -1,4 +1,4 @@
-name: Docker Image CI
+name: Docker Image CI with SonarQube Analysis and Kubernetes Deployment
 
 on:
   push:
@@ -16,3 +16,18 @@ jobs:
     - uses: actions/checkout@v3
     - name: Build the Docker image
       run: docker build . --file Dockerfile --tag my-image-name:$(date +%s)
+    
+    - name: SonarQube Scan
+      uses: sonarsource/sonarcloud-github-action@master
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+
+    - name: Configure kubectl
+      uses: azure/k8s-set-context@v1
+      with:
+        kubeconfig: ${{ secrets.KUBE_CONFIG_DATA }}
+    
+    - name: Deploy to DigitalOcean Kubernetes
+      run: |
+        kubectl apply -f deployment.yaml
