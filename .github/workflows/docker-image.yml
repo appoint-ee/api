@@ -1,18 +1,18 @@
-name: AppointeeApi
+name: AppointeeWeb
 
 on:
   push:
-    branches:
-      - main
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
 
 jobs:
-  build_and_push:
+
+  build:
+
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout repository
-      uses: actions/checkout@v2
-
     - name: Login to DigitalOcean Container Registry
       uses: digitalocean/action-doctl@v2
       with:
