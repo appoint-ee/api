@@ -14,19 +14,6 @@ jobs:
 
     steps:
 
-    - name: GitHub Action for DigitalOcean - doctl
-      uses: digitalocean/action-doctl@v2.5.1
-      with:
-        version: latest
-        no_auth: true
-        token: ${{ secrets.DO_TOKEN }}
-          
-
-    - name: Login to DigitalOcean Container Registry
-      uses: digitalocean/action-doctl@v2
-      with:
-        token: ${{ secrets.DO_TOKEN }}
-
     - name: Build Docker image
       run: docker build -t api .
 
@@ -35,21 +22,3 @@ jobs:
 
     - name: Push Docker image
       run: docker push registry.digitalocean.com/docr/api:latest
-
-  deploy:
-    needs: build_and_push
-    runs-on: ubuntu-latest
-
-    steps:
-    - name: Checkout repository
-      uses: actions/checkout@v2
-
-    - name: Login to DigitalOcean Kubernetes cluster
-      uses: digitalocean/action-doctl@v2
-      with:
-        token: ${{ secrets.DO_TOKEN }}
-      run: |
-        doctl kubernetes cluster kubeconfig save k8s-ams3-dev-appointee
-
-    - name: Apply Kubernetes Deployment
-      run: kubectl apply -f deployment.yaml
