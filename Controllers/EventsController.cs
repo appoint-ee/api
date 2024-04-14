@@ -2,46 +2,33 @@ using System.Net;
 using api.Models;
 using Microsoft.AspNetCore.Mvc;
 using System.Text.Json;
-using api.Extensions;
-using RestSharp;
+using api.Services;
 
 namespace api.Controllers;
 
 [ApiController]
 [Route("[controller]")]
-public class EventsController : Controller
+public class EventsController : ApiControllerBase
 {
-    private const string ApiUrl = "https://www.googleapis.com/calendar/v3/calendars/primary/events";
-
-    private readonly IConfiguration _configuration;
-    private readonly IRestClient _restClient;
+    private readonly IEventService _eventService;
 
     public EventsController(
-        IConfiguration configuration,
-        IRestClient restClient)
+        IEventService eventService)
     {
-        _configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
-        _restClient = restClient ?? throw new ArgumentNullException(nameof(restClient));
+        _eventService = eventService ?? throw new ArgumentNullException(nameof(eventService));
     }
 
     [HttpPost]
-    public async Task<ActionResult> Create(Event calendarEvent)
+    public async Task<ActionResult> Create([FromBody] Event calendarEvent)
     {
         var accessToken = GetAccessToken();
 
-        if (string.IsNullOrEmpty(accessToken))
+        if (string.IsNullOrWhiteSpace(accessToken))
         {
             return Unauthorized("Unauthorized: Access token is invalid or missing.");
         }
         
-        var request = new RestRequest(ApiUrl);
-        request.AddQueryParameter ("key", _configuration["GoogleAPI:Key"]);
-        request.AddHeader("Authorization", $"Bearer {accessToken}");
-        request.AddHeader ("Accept", "application/json");
-        request.AddHeader("Content-Type","application/json");
-        request.AddParameter("application/json", calendarEvent.SerializeWithCamelCase(), ParameterType.RequestBody);
-        
-        var response = await _restClient.ExecutePostAsync(request);
+        var response = await _eventService.Create(accessToken, calendarEvent);
 
         return StatusCode((int)response.StatusCode);
     }
@@ -51,106 +38,76 @@ public class EventsController : Controller
     {
         var accessToken = GetAccessToken();
         
-        if (string.IsNullOrEmpty(accessToken))
+        if (string.IsNullOrWhiteSpace(accessToken))
         {
             return Unauthorized("Unauthorized: Access token is invalid or missing.");
         }
-        
-        var request = new RestRequest(ApiUrl);
-        request.AddQueryParameter ("key", _configuration["GoogleAPI:Key"]);
-        request.AddHeader("Authorization", $"Bearer {accessToken}");
-        request.AddHeader ("Accept", "application/json");
-        
-        var response = await _restClient.ExecuteGetAsync(request);
 
-        if (response.StatusCode != System.Net.HttpStatusCode.OK
-            || response.Content == null) return StatusCode((int)response.StatusCode);
+        var response = await _eventService.Get(accessToken);
 
-        var jsonDocument = JsonDocument.Parse(response.Content);
-        var root = jsonDocument.RootElement;
-        if (!root.TryGetProperty("items", out var fieldValue))
+        if (response.StatusCode != HttpStatusCode.OK
+            || string.IsNullOrWhiteSpace(response.Content))
+        {
             return StatusCode((int)response.StatusCode);
+        }
+
+        var jsonDocument = JsonDocument.Parse(response.Content).RootElement;
+
+        if (!jsonDocument.TryGetProperty("items", out var events))
+        {
+            return StatusCode((int)response.StatusCode);
+        }
         
-        var fieldValueString = fieldValue.ToString();
-        return Ok(fieldValueString);
+        return Ok(events);
     }
     
     [HttpGet("{id}")]
-    public async Task<ActionResult> GetById(string id)
+    public async Task<ActionResult> GetById([FromRoute] string id)
     {
         var accessToken = GetAccessToken();
         
-        if (string.IsNullOrEmpty(accessToken))
+        if (string.IsNullOrWhiteSpace(accessToken))
         {
             return Unauthorized("Unauthorized: Access token is invalid or missing.");
         }
-        
-        var request = new RestRequest($"{ApiUrl}/{id}");
-        request.AddQueryParameter ("key", _configuration["GoogleAPI:Key"]);
-        request.AddHeader("Authorization", $"Bearer {accessToken}");
-        request.AddHeader ("Accept", "application/json");
-        
-        var response = await _restClient.ExecuteGetAsync(request);
+
+        var response = await _eventService.GetById(accessToken, id);
 
         if (response.StatusCode == HttpStatusCode.OK)
         {
-            return Ok(response.Content);
+            return Content(response.Content, "application/json");
         }
         
         return StatusCode((int)response.StatusCode);
     }
     
     [HttpPatch("{id}")]
-    public async Task<ActionResult> Update(string id, Event calendarEvent)
+    public async Task<ActionResult> Update([FromRoute] string id, [FromBody] Event calendarEvent)
     {
         var accessToken = GetAccessToken();
 
-        if (string.IsNullOrEmpty(accessToken))
+        if (string.IsNullOrWhiteSpace(accessToken))
         {
             return Unauthorized("Unauthorized: Access token is invalid or missing.");
         }
-
-        var request = new RestRequest($"{ApiUrl}/{id}", Method.Patch);
-        request.AddQueryParameter ("key", _configuration["GoogleAPI:Key"]);
-        request.AddHeader("Authorization", $"Bearer {accessToken}");
-        request.AddHeader ("Accept", "application/json");
-        request.AddHeader("Content-Type","application/json");
-        request.AddParameter("application/json", calendarEvent.SerializeWithCamelCase(), ParameterType.RequestBody);
         
-        var response = await _restClient.ExecuteAsync(request);
+        var response = await _eventService.Update(accessToken, id, calendarEvent);
 
         return StatusCode((int)response.StatusCode);
     }
     
     [HttpDelete("{id}")]
-    public async Task<ActionResult> Delete(string id)
+    public async Task<ActionResult> Delete([FromRoute] string id)
     {
         var accessToken = GetAccessToken();
         
-        if (string.IsNullOrEmpty(accessToken))
+        if (string.IsNullOrWhiteSpace(accessToken))
         {
             return Unauthorized("Unauthorized: Access token is invalid or missing.");
         }
-        
-        var request = new RestRequest($"{ApiUrl}/{id}", Method.Delete);
-        request.AddQueryParameter ("key", _configuration["GoogleAPI:Key"]);
-        request.AddHeader("Authorization", $"Bearer {accessToken}");
-        request.AddHeader ("Accept", "application/json");
-        
-        var response = await _restClient.ExecuteAsync(request);
+
+        var response = await _eventService.Delete(accessToken, id);
         
         return StatusCode((int)response.StatusCode);
-    }
-    
-    private string? GetAccessToken()
-    {
-        var authorizationHeader = HttpContext.Request.Headers["Authorization"].ToString();
-
-        if (string.IsNullOrEmpty(authorizationHeader) || !authorizationHeader.StartsWith("Bearer "))
-        {
-            return null;
-        }
-
-        return authorizationHeader["Bearer ".Length..];
     }
 }

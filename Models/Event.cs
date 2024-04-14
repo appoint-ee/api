@@ -1,3 +1,5 @@
+using System.Text.Json.Serialization;
+
 namespace api.Models;
 
 public class Event
@@ -14,15 +16,27 @@ public class Event
         };
     }
 
+    [JsonPropertyName("id")]
     public string? Id { get; set; }
+    
+    [JsonPropertyName("summary")]
     public string Summary { get; set; }
+    
+    [JsonPropertyName("description")]
     public string Description { get; set; }
+    
+    [JsonPropertyName("start")]
     public EventDateTime Start { get; set; }
+    
+    [JsonPropertyName("end")]
     public EventDateTime End { get; set; }
     
     public class EventDateTime
     {
-        public string DateTime { get; set; }
+        [JsonPropertyName("dateTime")]
+        public DateTime DateTime { get; set; }
+        
+        [JsonPropertyName("timeZone")]
         public string TimeZone { get; set; }
     }
 }

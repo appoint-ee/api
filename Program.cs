@@ -1,3 +1,4 @@
+using api.Services;
 using RestSharp;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -10,6 +11,9 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 builder.Services.AddTransient<IRestClient, RestClient>();
+
+builder.Services.AddScoped<IEventService, EventService>();
+builder.Services.AddScoped<ISlotService, SlotService>();
 
 var app = builder.Build();
 

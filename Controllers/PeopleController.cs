@@ -7,7 +7,7 @@ namespace api.Controllers;
 
 [ApiController]
 [Route("[controller]")]
-public class PeopleController : Controller
+public class PeopleController : ApiControllerBase
 {
     private const string ApiUrl = "https://people.googleapis.com/v1/people/me";
 
@@ -48,17 +48,5 @@ public class PeopleController : Controller
         }
         
         return StatusCode((int)response.StatusCode);
-    }
-    
-    private string? GetAccessToken()
-    {
-        var authorizationHeader = HttpContext.Request.Headers["Authorization"].ToString();
-
-        if (string.IsNullOrEmpty(authorizationHeader) || !authorizationHeader.StartsWith("Bearer "))
-        {
-            return null;
-        }
-
-        return authorizationHeader["Bearer ".Length..];
     }
 }
