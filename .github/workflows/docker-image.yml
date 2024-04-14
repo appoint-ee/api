@@ -2,26 +2,45 @@ name: AppointeeApi
 
 on:
   push:
-    branches: [ "main" ]
-  pull_request:
-    branches: [ "main" ]
+    branches:
+      - main
 
 jobs:
-
-  build:
-
+  build_and_push:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v3
-    - name: Build the Docker image
-      run: docker build . --file Dockerfile --tag my-image-name:$(date +%s)
+    - name: Checkout repository
+      uses: actions/checkout@v2
 
-    - name: Configure kubectl
-      uses: azure/k8s-set-context@v1
+    - name: Login to DigitalOcean Container Registry
+      uses: digitalocean/action-doctl@v2
       with:
-        kubeconfig: ${{ secrets.KUBE_CONFIG_DATA }}
-    
-    - name: Deploy to DigitalOcean Kubernetes
+        token: ${{ secrets.DO_TOKEN }}
+
+    - name: Build Docker image
+      run: docker build -t api .
+
+    - name: Tag Docker image
+      run: docker tag api registry.digitalocean.com/docr/api:latest
+
+    - name: Push Docker image
+      run: docker push registry.digitalocean.com/docr/api:latest
+
+  deploy:
+    needs: build_and_push
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v2
+
+    - name: Login to DigitalOcean Kubernetes cluster
+      uses: digitalocean/action-doctl@v2
+      with:
+        token: ${{ secrets.DO_TOKEN }}
       run: |
-        kubectl apply -f deployment.yaml
+        doctl kubernetes cluster kubeconfig save k8s-ams3-dev-appointee
+
+    - name: Apply Kubernetes Deployment
+      run: kubectl apply -f deployment.yaml
