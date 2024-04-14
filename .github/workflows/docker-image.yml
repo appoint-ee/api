@@ -1,4 +1,4 @@
-name: AppointeeWeb
+name: AppointeeApi
 
 on:
   push:
@@ -15,7 +15,7 @@ jobs:
     steps:
 
     - name: Build Docker image
-      run: docker build -t api .
+      run: docker build . --file Dockerfile --tag api:$(date +%s)
 
     - name: Tag Docker image
       run: docker tag api registry.digitalocean.com/docr/api:latest
