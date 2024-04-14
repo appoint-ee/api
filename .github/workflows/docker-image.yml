@@ -1,4 +1,4 @@
-name: AppointeeApi
+name: AppointeeWeb
 
 on:
   push:
@@ -8,19 +8,20 @@ on:
 
 jobs:
 
-  build:
-
+  deploy:
+    needs: build_and_push
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v3
-    - name: Build Docker image
-      run: docker build . --file Dockerfile --tag api:$(date +%s)
+    - name: Checkout repository
+      uses: actions/checkout@v2
 
-    - uses: actions/checkout@v3
-    - name: Tag Docker image
-      run: docker tag api:latest registry.digitalocean.com/docr-appointee/api:latest
-      
-    - uses: actions/checkout@v3
-    - name: Push Docker image
-      run: docker push registry.digitalocean.com/docr-appointee/api:latest
+    - name: Login to DigitalOcean Kubernetes cluster
+      uses: digitalocean/action-doctl@v2
+      with:
+        token: ${{ secrets.DO_TOKEN }}
+      run: |
+        doctl kubernetes cluster kubeconfig save k8s-ams3-dev-appointee
+
+    - name: Apply Kubernetes Deployment
+      run: kubectl apply -f deployment.yaml
