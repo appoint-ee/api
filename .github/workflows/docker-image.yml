@@ -13,12 +13,14 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-
+    - uses: actions/checkout@v3
     - name: Build Docker image
-      run: docker build . --file /Dockerfile --tag api:$(date +%s)
+      run: docker build . --file Dockerfile --tag api:$(date +%s)
 
+    - uses: actions/checkout@v3
     - name: Tag Docker image
       run: docker tag api registry.digitalocean.com/docr/api:latest
 
+    - uses: actions/checkout@v3
     - name: Push Docker image
       run: docker push registry.digitalocean.com/docr/api:latest
