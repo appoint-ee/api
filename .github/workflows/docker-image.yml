@@ -13,6 +13,15 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+
+    - name: GitHub Action for DigitalOcean - doctl
+      uses: digitalocean/action-doctl@v2.5.1
+      with:
+        version: latest
+        no_auth: true
+        token: ${{ secrets.DO_TOKEN }}
+          
+
     - name: Login to DigitalOcean Container Registry
       uses: digitalocean/action-doctl@v2
       with:
