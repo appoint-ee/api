@@ -1,22 +1,22 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: api-deployment
+  name: appointee-api
   labels:
-    app: api
+    app: appointee-api
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: api
+      app: appointee-api
   template:
     metadata:
       labels:
-        app: api
+        app: appointee-api
     spec:
       containers:
-      - name: api
-        image: registry.digitalocean.com/docr-appointee/api:latest
+      - name: appointee-api
+        image: registry.digitalocean.com/docr-appointee/appointee-api:latest
         ports:
         - containerPort: 80
         resources:
@@ -30,10 +30,10 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: api-service
+  name: appointee-api-service
 spec:
   selector:
-    app: api
+    app: appointee-api
   ports:
     - protocol: TCP
       port: 3000
