@@ -1,5 +1,7 @@
 using System.Net;
 using System.Text.Json;
+using api.Controllers.Models;
+using api.Models;
 using Microsoft.AspNetCore.Mvc;
 using RestSharp;
 
@@ -23,7 +25,7 @@ public class PeopleController : ApiControllerBase
     }
     
     [HttpGet]
-    public async Task<ActionResult> GetUserInfo()
+    public async Task<ActionResult<GetUserInfoResponse>> GetUserInfo()
     {
         var accessToken = GetAccessToken();
         
@@ -34,7 +36,7 @@ public class PeopleController : ApiControllerBase
         
         var request = new RestRequest(ApiUrl);
         request.AddQueryParameter ("key", _configuration["GoogleAPI:Key"]);
-        request.AddQueryParameter ("personFields", "emailAddresses,birthdays");
+        request.AddQueryParameter ("personFields", "emailAddresses,names,phoneNumbers,addresses,locales,photos");
         request.AddHeader("Authorization", $"Bearer {accessToken}");
         request.AddHeader ("Accept", "application/json");
         
@@ -43,8 +45,24 @@ public class PeopleController : ApiControllerBase
         if (response.StatusCode == HttpStatusCode.OK 
             && !string.IsNullOrEmpty(response.Content))
         {
-            var jsonDocument = JsonDocument.Parse(response.Content); 
-            return Ok(jsonDocument);
+            var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+            var apiResponse = JsonSerializer.Deserialize<GetGoogleApiPeopleResponse>(response.Content, options);
+
+            if (apiResponse == null)
+            {
+                return NotFound();
+            }
+            
+            // TODO: Google responses return arrays - if we use this, we could prioritize those with primary:true
+            return Ok(new GetUserInfoResponse()
+            {
+                Locale = apiResponse.Locales?.FirstOrDefault()?.Value,
+                Name = apiResponse.Names?.FirstOrDefault()?.DisplayName,
+                PhotoUrl = apiResponse.Photos?.FirstOrDefault()?.Url,
+                Address = apiResponse.Addresses?.FirstOrDefault()?.FormattedValue,
+                EmailAddress = apiResponse.EmailAddresses?.FirstOrDefault()?.Value,
+                PhoneNumber = apiResponse.PhoneNumbers?.FirstOrDefault()?.CanonicalForm
+            });
         }
         
         return StatusCode((int)response.StatusCode);
