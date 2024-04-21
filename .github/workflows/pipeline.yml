@@ -1,0 +1,40 @@
+name: AppointeeApi
+
+on:
+  push:
+    branches: [ "development" ]
+  pull_request:
+    branches: [ "development" ]
+
+jobs:
+
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+    - name: Build the Docker image
+      run: docker build . --file Dockerfile --tag web:$(date +%s)
+    - name: Log in to DigitalOcean Container Registry
+      run: echo "${{ secrets.DIGITALOCEAN_REGISTRY_TOKEN }}" | docker login -u ${{ secrets.DIGITALOCEAN_REGISTRY_USERNAME }} --password-stdin registry.digitalocean.com
+    - name: Push Docker image to DigitalOcean Container Registry
+      run: docker pull registry.digitalocean.com/docr-appointee/web
+    - name: Push Docker image to DigitalOcean Container Registry
+      run: docker push registry.digitalocean.com/docr-appointee/web
+
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v2
+
+    - name: Set up kubectl
+      uses: azure/k8s-set-context@v1
+      with:
+        kubeconfig: ${{ secrets.KUBE_CONFIG_DATA }}
+
+    - name: Deploy to Kubernetes
+      run: |
+        kubectl apply -f deployment.yaml
