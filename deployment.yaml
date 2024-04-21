@@ -1,0 +1,39 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: appointee-api
+  labels:
+    app: appointee-api
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: appointee-api
+  template:
+    metadata:
+      labels:
+        app: appointee-api
+    spec:
+      containers:
+      - name: appointee-api
+        image: registry.digitalocean.com/docr-appointee/api:latest
+        ports:
+        - containerPort: 80
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "500m"
+          limits:
+            memory: "512Mi"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: appointee-api-service
+spec:
+  selector:
+    app.kubernetes.io/name: appointee-api
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 80
