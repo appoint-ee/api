@@ -15,17 +15,18 @@ jobs:
     steps:
     - uses: actions/checkout@v3
     - name: Build the Docker image
-      run: docker build . --file Dockerfile --tag web:$(date +%s)
+      run: docker build . --file Dockerfile --tag api:$(date +%s)
     - name: Log in to DigitalOcean Container Registry
       run: echo "${{ secrets.DIGITALOCEAN_REGISTRY_TOKEN }}" | docker login -u ${{ secrets.DIGITALOCEAN_REGISTRY_USERNAME }} --password-stdin registry.digitalocean.com
     - name: Push Docker image to DigitalOcean Container Registry
-      run: docker pull registry.digitalocean.com/docr-appointee/web
+      run: docker pull registry.digitalocean.com/docr-appointee/api
     - name: Push Docker image to DigitalOcean Container Registry
-      run: docker push registry.digitalocean.com/docr-appointee/web
+      run: docker push registry.digitalocean.com/docr-appointee/api
 
   deploy:
     runs-on: ubuntu-latest
-
+    needs: build
+    
     steps:
     - name: Checkout repository
       uses: actions/checkout@v2
@@ -37,4 +38,4 @@ jobs:
 
     - name: Deploy to Kubernetes
       run: |
-        kubectl apply -f deployment.yaml
+        kubectl apply -f .github/workflows/deployment.yaml
