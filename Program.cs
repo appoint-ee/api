@@ -5,6 +5,14 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("MyCorsPolicy",
+        cp => cp.WithOrigins(builder.Configuration.GetSection("WebUrl").Value)
+            .AllowAnyMethod()
+            .AllowAnyHeader());
+});
+
 builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
@@ -16,6 +24,8 @@ builder.Services.AddScoped<IEventService, EventService>();
 builder.Services.AddScoped<ISlotService, SlotService>();
 
 var app = builder.Build();
+
+app.UseCors("MyCorsPolicy");
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
