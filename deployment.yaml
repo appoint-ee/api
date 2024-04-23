@@ -17,6 +17,11 @@ spec:
       containers:
       - name: appointee-api
         image: registry.digitalocean.com/docr-appointee/api:latest
+        env:
+        - name: GoogleAPI__Key
+          value: "AIzaSyCkSKM3cIARzBXU_VYFCAx0dbNIABniQoI"
+        - name: WebUrl
+          value: "appoint.ee"
         ports:
         - containerPort: 80
         # resources:
