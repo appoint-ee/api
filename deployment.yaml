@@ -19,12 +19,13 @@ spec:
         image: registry.digitalocean.com/docr-appointee/api:latest
         ports:
         - containerPort: 80
-        resources:
-          requests:
-            memory: "512Mi"
-            cpu: "500m"
-          limits:
-            memory: "512Mi"
+        # resources:
+        #   requests:
+        #     memory: "64Mi"
+        #     cpu: "250m"
+        #   limits:
+        #     memory: "128Mi"
+        #     cpu: "500m"
 ---
 apiVersion: v1
 kind: Service
@@ -32,7 +33,7 @@ metadata:
   name: appointee-api-service
 spec:
   selector:
-    app.kubernetes.io/name: appointee-api
+    app: appointee-api
   ports:
     - protocol: TCP
       port: 80
