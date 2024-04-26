@@ -25,7 +25,7 @@ WORKDIR /app
 # Copy the published output from the build stage to the runtime image
 COPY --from=build /app/publish .
 
-# Expose port 80 for the application
+# Expose port 80 for the application 
 EXPOSE 80
 
 # Define the command to run the application when the container starts
