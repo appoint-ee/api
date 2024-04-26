@@ -26,7 +26,7 @@ WORKDIR /app
 COPY --from=build /app/publish .
 
 # Expose port 80 for the application
-EXPOSE 8080
+EXPOSE 80
 
 # Define the command to run the application when the container starts
 ENTRYPOINT ["dotnet", "api.dll"]
