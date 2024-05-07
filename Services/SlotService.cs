@@ -13,40 +13,34 @@ public class SlotService : ISlotService
          
          while (currentDateTime < endDateTime)
          {
+             var nextDateTime = currentDateTime.AddHours(1);
+
+             var isWorkingDay = currentDateTime.DayOfWeek is not DayOfWeek.Saturday and not DayOfWeek.Sunday;
+
              var isWorkingHours = currentDateTime.TimeOfDay >= startWorkingTime 
                                   && currentDateTime.TimeOfDay < endWorkingTime;
 
-             if (isWorkingHours)
+             if (!isWorkingDay || !isWorkingHours)
              {
-                 var nextDateTime = currentDateTime.AddHours(1);
-
-                 var isBooked = events != null && events.Any(e =>
-                     e.Start.DateTime < currentDateTime && currentDateTime < e.End.DateTime       
-                     || currentDateTime < e.Start.DateTime &&  e.End.DateTime < nextDateTime       
-                     || e.Start.DateTime < nextDateTime && nextDateTime < e.End.DateTime);        
-
-                 var status = isBooked ? "booked" : "available";
-                 
-                 timeSlots.Add(new TimeSlot
-                 {
-                     StartTime = currentDateTime,
-                     EndTime = nextDateTime,
-                     Status = status
-                 });
-
                  currentDateTime = nextDateTime;
+                 continue;
              }
-             else
-             {
-                 timeSlots.Add(new TimeSlot
-                 {
-                     StartTime = currentDateTime,
-                     EndTime = currentDateTime.AddHours(1),
-                     Status = "not available"
-                 });
 
-                 currentDateTime = currentDateTime.AddHours(1);
-             }
+             var isBooked = events != null && events.Any(e =>
+                 e.Start.DateTime < currentDateTime && currentDateTime < e.End.DateTime       
+                 || currentDateTime < e.Start.DateTime &&  e.End.DateTime < nextDateTime       
+                 || e.Start.DateTime < nextDateTime && nextDateTime < e.End.DateTime);        
+
+             var status = isBooked ? "booked" : "available";
+                 
+             timeSlots.Add(new TimeSlot
+             {
+                 StartTime = currentDateTime,
+                 EndTime = nextDateTime,
+                 Status = status
+             });
+
+             currentDateTime = nextDateTime;
          }
          
          return timeSlots;

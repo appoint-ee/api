@@ -8,7 +8,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("MyCorsPolicy",
-        cp => cp.WithOrigins(builder.Configuration.GetSection("WebUrl").Value)
+        cp => cp.AllowAnyOrigin() // TODO: Rollback this
             .AllowAnyMethod()
             .AllowAnyHeader());
 });
