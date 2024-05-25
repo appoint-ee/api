@@ -1,0 +1,155 @@
+using api.Data.Entities;
+using Microsoft.EntityFrameworkCore;
+
+namespace api.Data;
+
+public class DataContext : DbContext
+{
+    public DataContext(DbContextOptions<DataContext> options) : base(options) {}
+
+    public DbSet<Meeting> Meetings { get; set; }
+    public DbSet<MeetingAttendee> MeetingAttendees { get; set; }
+    public DbSet<User> Users { get; set; }
+    
+    protected override void OnModelCreating(ModelBuilder modelBuilder)
+    {
+        base.OnModelCreating(modelBuilder);
+
+        modelBuilder.Entity<Meeting>(entity =>
+        {
+            entity.ToTable("meetings");
+
+            entity.HasKey(e => e.Id);
+
+            entity.Property(e => e.Id)
+                .HasColumnName("id")
+                .HasDefaultValueSql("uuid_generate_v4()");
+
+            entity.Property(e => e.Title)
+                .HasColumnName("title")
+                .IsRequired()
+                .HasMaxLength(100);
+
+            entity.Property(e => e.Description)
+                .HasColumnName("description");
+            
+            entity.Property(e => e.Status)
+                .HasColumnName("status")      
+                .HasMaxLength(20);
+
+            entity.Property(e => e.StartTime)
+                .HasColumnName("start_time")
+                .IsRequired();
+
+            entity.Property(e => e.EndTime)
+                .HasColumnName("end_time")
+                .IsRequired();
+
+            entity.Property(e => e.CreatedAt)
+                .HasColumnName("created_at")
+                .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+            entity.Property(e => e.UpdatedAt)
+                .HasColumnName("updated_at")
+                .HasDefaultValueSql("CURRENT_TIMESTAMP");
+        });
+        
+        modelBuilder.Entity<MeetingAttendee>(entity =>
+        {
+            entity.ToTable("meeting_attendees");
+            
+            entity.HasKey(e => e.Id);
+
+            entity.Property(e => e.Id)
+                .HasColumnName("id")
+                .HasDefaultValueSql("uuid_generate_v4()");
+
+            entity.Property(e => e.MeetingId)
+                .HasColumnName("meeting_id");
+
+            entity.Property(e => e.UserId)
+                .HasColumnName("user_id")
+                .IsRequired();
+
+            entity.Property(e => e.IsCreator)
+                .HasColumnName("is_creator")
+                .IsRequired();
+
+            entity.Property(e => e.Status)
+                .HasColumnName("status")      
+                .HasMaxLength(20);
+
+            entity.Property(e => e.CreatedAt)
+                .HasColumnName("created_at")
+                .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+            entity.Property(e => e.UpdatedAt)
+                .HasColumnName("updated_at")
+                .HasDefaultValueSql("CURRENT_TIMESTAMP");
+        });
+        
+        modelBuilder.Entity<User>(entity =>
+        {
+            entity.ToTable("users");
+            
+            entity.HasKey(e => e.Id);
+
+            entity.Property(e => e.Id)
+                .HasColumnName("id")
+                .HasDefaultValueSql("uuid_generate_v4()");
+
+            entity.Property(e => e.UserName)
+                .HasColumnName("user_name")
+                .IsRequired()
+                .HasMaxLength(10);
+            
+            entity.Property(e => e.FirstName)
+                .HasColumnName("first_name")
+                .IsRequired()
+                .HasMaxLength(50);
+            
+            entity.Property(e => e.LastName)
+                .HasColumnName("last_name")
+                .IsRequired()
+                .HasMaxLength(50); 
+            
+            entity.HasIndex(u => u.EmailAddress).IsUnique();
+
+            entity.Property(u => u.EmailAddress)
+                .HasColumnName("email_address")
+                .IsRequired()
+                .HasMaxLength(100);
+
+            entity.Property(u => u.PhotoUrl)
+                .HasColumnName("photo_url");
+            
+            entity.Property(e => e.Status)
+                .HasColumnName("status")
+                .IsRequired()
+                .HasMaxLength(20);
+
+            entity.Property(e => e.Address)
+                .HasColumnName("address");
+            
+            entity.Property(e => e.CountryCode)
+                .HasColumnName("country_code")
+                .HasMaxLength(2);  
+            
+            entity.Property(e => e.LangCode)
+                .HasColumnName("lang_code")
+                .HasMaxLength(5);  
+            
+            entity.Property(e => e.PreferredTimeZone)
+                .HasColumnName("preferred_time_zone")
+                .HasMaxLength(50);  
+            
+            entity.Property(e => e.CreatedAt)
+                .HasColumnName("created_at")
+                .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+            entity.Property(e => e.UpdatedAt)
+                .HasColumnName("updated_at")
+                .HasDefaultValueSql("CURRENT_TIMESTAMP");
+        });
+    }
+}

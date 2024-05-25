@@ -1,8 +1,11 @@
 using System.Net;
 using System.Text.Json;
 using api.Controllers.Models;
+using api.Data;
+using api.Data.Entities;
 using api.Models;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using RestSharp;
 
 namespace api.Controllers;
@@ -13,13 +16,16 @@ public class PeopleController : ApiControllerBase
 {
     private const string ApiUrl = "https://people.googleapis.com/v1/people/me";
 
+    private readonly DataContext _context;
     private readonly IConfiguration _configuration;
     private readonly IRestClient _restClient;
     
     public PeopleController(
+        DataContext context,
         IConfiguration configuration,
         IRestClient restClient)
     {
+        _context = context ?? throw new ArgumentNullException(nameof(context));
         _configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
         _restClient = restClient ?? throw new ArgumentNullException(nameof(restClient));
     }
@@ -66,5 +72,11 @@ public class PeopleController : ApiControllerBase
         }
         
         return StatusCode((int)response.StatusCode);
+    }
+
+    [HttpGet("{userName}")]
+    public async Task<User?> GetPersonByUserName(string userName)
+    {
+        return await _context.Users.FirstOrDefaultAsync(u => u.UserName == userName);
     }
 }
