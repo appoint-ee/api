@@ -4,14 +4,14 @@ using RestSharp;
 
 namespace api.Services;
 
-public class EventService : IEventService
+public class GoogleEventService : IGoogleEventService
 {
     private const string ApiUrl = "https://www.googleapis.com/calendar/v3/calendars/primary/events";
 
     private readonly IConfiguration _configuration;
     private readonly IRestClient _restClient;
 
-    public EventService(
+    public GoogleEventService(
         IConfiguration configuration,
         IRestClient restClient)
     {

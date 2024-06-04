@@ -6,16 +6,17 @@ using api.Services;
 
 namespace api.Controllers;
 
+[Obsolete]
 [ApiController]
 [Route("[controller]")]
 public class EventsController : ApiControllerBase
 {
-    private readonly IEventService _eventService;
+    private readonly IGoogleEventService _googleEventService;
 
     public EventsController(
-        IEventService eventService)
+        IGoogleEventService googleEventService)
     {
-        _eventService = eventService ?? throw new ArgumentNullException(nameof(eventService));
+        _googleEventService = googleEventService ?? throw new ArgumentNullException(nameof(googleEventService));
     }
 
     [HttpPost]
@@ -28,7 +29,7 @@ public class EventsController : ApiControllerBase
             return Unauthorized("Unauthorized: Access token is invalid or missing.");
         }
         
-        var response = await _eventService.Create(accessToken, calendarEvent);
+        var response = await _googleEventService.Create(accessToken, calendarEvent);
 
         return StatusCode((int)response.StatusCode);
     }
@@ -43,7 +44,7 @@ public class EventsController : ApiControllerBase
             return Unauthorized("Unauthorized: Access token is invalid or missing.");
         }
 
-        var response = await _eventService.Get(accessToken);
+        var response = await _googleEventService.Get(accessToken);
 
         if (response.StatusCode != HttpStatusCode.OK
             || string.IsNullOrWhiteSpace(response.Content))
@@ -71,7 +72,7 @@ public class EventsController : ApiControllerBase
             return Unauthorized("Unauthorized: Access token is invalid or missing.");
         }
 
-        var response = await _eventService.GetById(accessToken, id);
+        var response = await _googleEventService.GetById(accessToken, id);
 
         if (response.StatusCode == HttpStatusCode.OK)
         {
@@ -91,7 +92,7 @@ public class EventsController : ApiControllerBase
             return Unauthorized("Unauthorized: Access token is invalid or missing.");
         }
         
-        var response = await _eventService.Update(accessToken, id, calendarEvent);
+        var response = await _googleEventService.Update(accessToken, id, calendarEvent);
 
         return StatusCode((int)response.StatusCode);
     }
@@ -106,7 +107,7 @@ public class EventsController : ApiControllerBase
             return Unauthorized("Unauthorized: Access token is invalid or missing.");
         }
 
-        var response = await _eventService.Delete(accessToken, id);
+        var response = await _googleEventService.Delete(accessToken, id);
         
         return StatusCode((int)response.StatusCode);
     }

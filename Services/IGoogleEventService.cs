@@ -3,7 +3,7 @@ using RestSharp;
 
 namespace api.Services;
 
-public interface IEventService 
+public interface IGoogleEventService 
 {
     Task<RestResponse> Create(string accessToken, Event calendarEvent);
     Task<RestResponse> Get(string accessToken);

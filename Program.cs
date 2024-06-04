@@ -25,8 +25,10 @@ builder.Services.AddDbContext<DataContext>(options =>
 
 builder.Services.AddTransient<IRestClient, RestClient>();
 
-builder.Services.AddScoped<IEventService, EventService>();
+builder.Services.AddScoped<IGoogleEventService, GoogleEventService>();
+builder.Services.AddScoped<IMeetingService, MeetingService>();
 builder.Services.AddScoped<ISlotService, SlotService>();
+builder.Services.AddScoped<IUserService, UserService>();
 
 var app = builder.Build();
 

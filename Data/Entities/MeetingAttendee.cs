@@ -8,11 +8,15 @@ public class MeetingAttendee
     [Key]
     public Guid Id { get; set; }
 
-    public long UserId { get; set; }
+    public long? UserId { get; set; }
+    
+    [ForeignKey("UserId")]
+    public User? User { get; set; }
     
     public bool IsCreator { get; set; }
 
     public Guid MeetingId { get; set; }
+    
     [ForeignKey("MeetingId")]
     public Meeting Meeting { get; set; }
 

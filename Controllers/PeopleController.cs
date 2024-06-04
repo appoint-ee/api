@@ -10,6 +10,7 @@ using RestSharp;
 
 namespace api.Controllers;
 
+[Obsolete]
 [ApiController]
 [Route("[controller]")]
 public class PeopleController : ApiControllerBase

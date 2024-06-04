@@ -1,10 +1,11 @@
+using api.Controllers.Models;
 using api.Models;
 
 namespace api.Services;
 
 public class SlotService : ISlotService
 {
-    public List<TimeSlot> GenerateTimeSlots(DateTime startDateTime, DateTime endDateTime, IList<Event>? events)
+    public List<TimeSlot> GenerateTimeSlots(DateTime startDateTime, DateTime endDateTime, IList<GetMeetingResponse>? meetings)
     { 
          var timeSlots = new List<TimeSlot>();
          var startWorkingTime = new TimeSpan(9, 0, 0);
@@ -26,10 +27,11 @@ public class SlotService : ISlotService
                  continue;
              }
 
-             var isBooked = events != null && events.Any(e =>
-                 e.Start.DateTime < currentDateTime && currentDateTime < e.End.DateTime       
-                 || currentDateTime < e.Start.DateTime &&  e.End.DateTime < nextDateTime       
-                 || e.Start.DateTime < nextDateTime && nextDateTime < e.End.DateTime);        
+             var isBooked = meetings != null && meetings.Any(m =>
+                 m.StartTime < currentDateTime && currentDateTime < m.EndTime       
+                 || currentDateTime < m.StartTime &&  m.EndTime < nextDateTime       
+                 || currentDateTime == m.StartTime &&  m.EndTime == nextDateTime       
+                 || m.StartTime < nextDateTime && nextDateTime < m.EndTime);        
 
              var status = isBooked ? "booked" : "available";
                  
@@ -46,11 +48,11 @@ public class SlotService : ISlotService
          return timeSlots;
     }
 
-    public List<DaySlot> GenerateDaySlots(DateTime startDateTime, DateTime endDateTime, IList<Event>? events)
+    public List<DaySlot> GenerateDaySlots(DateTime startDateTime, DateTime endDateTime, IList<GetMeetingResponse>? meetings)
     { 
         var daySlots = new List<DaySlot>();
         
-        var timeSlots = GenerateTimeSlots(startDateTime, endDateTime, events);
+        var timeSlots = GenerateTimeSlots(startDateTime, endDateTime, meetings);
 
         var currentDate = startDateTime.Date;
 

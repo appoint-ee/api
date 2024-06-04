@@ -8,7 +8,7 @@ public class User
     [Key]
     public long Id { get; set; }
 
-    [Required, StringLength(10)]
+    [Required, StringLength(30)]
     public string UserName { get; set; }
     
     [Required, StringLength(50)]
@@ -26,16 +26,16 @@ public class User
     [StringLength(20)]
     public string Status { get; set; }
 
-    public string Address { get; set; }
+    public string? Address { get; set; }
 
     [StringLength(2)]
-    public string CountryCode { get; set; }
+    public string? CountryCode { get; set; }
 
     [StringLength(5)]
-    public string LangCode { get; set; }
+    public string? LangCode { get; set; }
 
     [StringLength(50)]
-    public string PreferredTimeZone { get; set; }
+    public string? PreferredTimeZone { get; set; }
 
     [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
     public DateTime CreatedAt { get; set; }
