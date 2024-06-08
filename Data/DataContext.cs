@@ -10,6 +10,7 @@ public class DataContext : DbContext
     public DbSet<Meeting> Meetings { get; set; }
     public DbSet<MeetingAttendee> MeetingAttendees { get; set; }
     public DbSet<User> Users { get; set; }
+    public DbSet<GoogleAuth> GoogleAuths { get; set; }
     
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -150,6 +151,46 @@ public class DataContext : DbContext
             entity.Property(e => e.UpdatedAt)
                 .HasColumnName("updated_at")
                 .HasDefaultValueSql("CURRENT_TIMESTAMP");
+        });
+        
+        modelBuilder.Entity<GoogleAuth>(entity =>
+        {
+            entity.ToTable("google_auths");
+
+            entity.HasKey(e => e.Id);
+
+            entity.Property(e => e.Id)
+                .HasColumnName("id")
+                .HasDefaultValueSql("uuid_generate_v4()");
+            
+            entity.Property(e => e.UserId)
+                .HasColumnName("user_id")
+                .IsRequired();
+            
+            entity.Property(e => e.AccessToken)
+                .HasColumnName("access_token")
+                .IsRequired();
+
+            entity.Property(e => e.ExpiresIn)
+                .HasColumnName("expires_in")
+                .IsRequired();
+            
+            entity.Property(e => e.RefreshToken)
+                .HasColumnName("refresh_token")
+                .IsRequired();
+
+            entity.Property(e => e.Scope)
+                .HasColumnName("scope")
+                .IsRequired();
+
+            entity.Property(e => e.TokenType)
+                .HasColumnName("token_type")
+                .IsRequired()
+                .HasMaxLength(32);
+
+            entity.Property(e => e.IdToken)
+                .HasColumnName("id_token")
+                .IsRequired();
         });
     }
 }
