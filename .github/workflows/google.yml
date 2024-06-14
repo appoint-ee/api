@@ -1,91 +1,58 @@
-# This workflow will build a docker container, publish it to Google Container Registry, and deploy it to GKE when there is a push to the "main" branch.
-#
-# To configure this workflow:
-#
-# 1. Ensure that your repository contains the necessary configuration for your Google Kubernetes Engine cluster, including deployment.yml, kustomization.yml, service.yml, etc.
-#
-# 2. Create and configure a Workload Identity Provider for GitHub (https://github.com/google-github-actions/auth#setting-up-workload-identity-federation)
-#
-# 3. Change the values for the GAR_LOCATION, GKE_ZONE, GKE_CLUSTER, IMAGE, REPOSITORY and DEPLOYMENT_NAME environment variables (below).
-#
-# For more support on how to run the workflow, please visit https://github.com/google-github-actions/setup-gcloud/tree/master/example-workflows/gke-kustomize
+# pipeline.yaml
 
-name: Build and Deploy to GKE
+# Pipeline configuration to build Docker image, push to Artifact Registry, and deploy to GKE
 
-on:
-  push:
-    branches: [ "main" ]
+# Define the pipeline
+pipeline:
+  name: appointee-api
+  # Specify the triggers for the pipeline, e.g., on push to main branch
+  trigger:
+    branch:
+      - main
 
-env:
-  PROJECT_ID: ${{ secrets.GKE_PROJECT }}
-  GAR_LOCATION: europe-west1 # TODO: update region of the Artifact Registry
-  GKE_CLUSTER: ${{ secrets.GKE_CLUSTER }}   # TODO: update to cluster name
-  GKE_ZONE: europe-west1-c   # TODO: update to cluster zone
-  DEPLOYMENT_NAME: appointee-api # TODO: update to deployment name
-  REPOSITORY: appointee # TODO: update to Artifact Registry docker repository
-  IMAGE: appointee
+  # Define the jobs that make up this pipeline
+  jobs:
+    - name: build-and-push-container
+      # This job builds Docker image from Dockerfile and pushes to Google Artifact Registry
+      steps:
+        - name: checkout-repo
+          # Checkout the GitHub repository
+          image: alpine/git
+          commands:
+            - git clone https://github.com/appoint-ee/api.git ./source
 
-jobs:
-  setup-build-publish-deploy:
-    name: Setup, Build, Publish, and Deploy
-    runs-on: ubuntu-latest
-    environment: development
+        - name: build-container
+          # Build Docker image using Dockerfile in the repository
+          image: docker:19.03.12
+          commands:
+            - cd ./blob/main/Dockerfile  # Adjust path to your Dockerfile
+            - docker build -t europe-west1-docker.pkg.dev/rich-compiler-425212-b5/appointee/api:latest .
+            - docker push europe-west1-docker.pkg.dev/rich-compiler-425212-b5/appointee/api:latest:latest
 
-    permissions:
-      contents: 'read'
-      id-token: 'write'
+    - name: deploy-to-gke
+      # This job deploys the Kubernetes manifest to Google Kubernetes Engine
+      steps:
+        - name: deploy
+          image: google/cloud-sdk:latest
+          env:
+            - GOOGLE_APPLICATION_CREDENTIALS: ${{secret:googlecredentials}}
+          commands:
+            - gcloud auth activate-service-account --key-file=$GOOGLE_APPLICATION_CREDENTIALS
+            - gcloud config set project rich-compiler-425212-b5
+            - gcloud config set compute/zone europe-west1
 
-    steps:
-    - name: Checkout
-      uses: actions/checkout@v4
+            # Apply deployment.yaml to your Kubernetes cluster
+            - kubectl apply -f ./deployment.yaml  # Adjust path to your deployment.yaml
 
-    # Configure Workload Identity Federation and generate an access token.
-    - id: 'auth'
-      name: 'Authenticate to Google Cloud'
-      uses: 'google-github-actions/auth@v0'
-      with:
-        token_format: 'access_token'
-        workload_identity_provider: 'projects/249894150111/locations/global/workloadIdentityPools/1001/providers/github'
-        service_account: 'github@rich-compiler-425212-b5.iam.gserviceaccount.com'
+# Specify the resources that may be used in the pipeline
+resources:
+  # Define the secrets needed in the pipeline
+  secrets:
+    - name: google-cloud-credentials
+      type: gcpServiceAccount
+      keyfile: base64stringofyourgcpkeyfile
 
-    # Alternative option - authentication via credentials json
-    # - id: 'auth'
-    #   uses: 'google-github-actions/auth@v0'
-    #   with:
-    #     credentials_json: '${{ secrets.GCP_CREDENTIALS }}'
-
-    - name: Docker configuration
-      run: |-
-        echo ${{steps.auth.outputs.access_token}} | docker login -u oauth2accesstoken --password-stdin https://$GAR_LOCATION-docker.pkg.dev
-    # Get the GKE credentials so we can deploy to the cluster
-    - name: Set up GKE credentials
-      uses: google-github-actions/get-gke-credentials@v0
-      with:
-        cluster_name: ${{ env.GKE_CLUSTER }}
-        location: ${{ env.GKE_ZONE }}
-
-    # Build the Docker image
-    - name: Build
-      run: |-
-        docker build \
-          --tag "$GAR_LOCATION-docker.pkg.dev/$PROJECT_ID/$REPOSITORY/$IMAGE:$GITHUB_SHA" \
-          --build-arg GITHUB_SHA="$GITHUB_SHA" \
-          --build-arg GITHUB_REF="$GITHUB_REF" \
-          .
-    # Push the Docker image to Google Artifact Registry
-    - name: Publish
-      run: |-
-        docker push "$GAR_LOCATION-docker.pkg.dev/$PROJECT_ID/$REPOSITORY/$IMAGE:$GITHUB_SHA"
-    # Set up kustomize
-    - name: Set up Kustomize
-      run: |-
-        curl -sfLo kustomize https://github.com/kubernetes-sigs/kustomize/releases/download/v3.1.0/kustomize_3.1.0_linux_amd64
-        chmod u+x ./kustomize
-    # Deploy the Docker image to the GKE cluster
-    - name: Deploy
-      run: |-
-        # replacing the image name in the k8s template
-        ./kustomize edit set image LOCATION-docker.pkg.dev/PROJECT_ID/REPOSITORY/IMAGE:TAG=$GAR_LOCATION-docker.pkg.dev/$PROJECT_ID/$REPOSITORY/$IMAGE:$GITHUB_SHA
-        ./kustomize build . | kubectl apply -f -
-        kubectl rollout status deployment/$DEPLOYMENT_NAME
-        kubectl get services -o wide
+# Define the configuration for the pipeline execution
+configuration:
+  # Specify the GCP project ID where your Artifact Registry and GKE cluster are located
+  projectId: rich-compiler-425212-b5
