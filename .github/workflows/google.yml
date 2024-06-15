@@ -14,12 +14,13 @@ jobs:
         uses: actions/checkout@v2
 
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v1
+        uses: docker/setup-buildx-action@v2
 
       - name: Login to Google Cloud
         uses: google-github-actions/auth@v1
         with:
-          credentials_json: ${{ secrets.GCP_SA_KEY }}
+          workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
 
       - name: Configure docker to use the gcloud command-line tool as a credential helper
         run: |
@@ -27,8 +28,8 @@ jobs:
 
       - name: Build and push Docker image
         run: |
-          docker build -t europe-west1-docker.pkg.dev/rich-compiler-425212-b5/appointee/api:latest .
-          docker push europe-west1-docker.pkg.dev/rich-compiler-425212-b5/appointee/api:latest
+          docker build -t europe-west1-docker.pkg.dev/my-gcp-project/appointee/api:latest .
+          docker push europe-west1-docker.pkg.dev/my-gcp-project/appointee/api:latest
 
   deploy:
     needs: build
@@ -41,7 +42,8 @@ jobs:
       - name: Login to Google Cloud
         uses: google-github-actions/auth@v1
         with:
-          credentials_json: ${{ secrets.GCP_SA_KEY }}
+          workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
 
       - name: Install kubectl
         run: |
@@ -50,7 +52,7 @@ jobs:
 
       - name: Configure kubectl
         run: |
-          gcloud container clusters get-credentials [YOUR_CLUSTER_NAME] --zone europe-west1 --project rich-compiler-425212-b5
+          gcloud container clusters get-credentials my-cluster --zone europe-west1 --project my-gcp-project
 
       - name: Deploy to GKE
         run: |
