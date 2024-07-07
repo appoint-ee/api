@@ -56,8 +56,8 @@ jobs:
 
       - name: Configure kubectl
         run: |
-          gcloud container clusters get-credentials gke-appointee-gwe-dev-ueshiba --zone europe-west1 --project rich-compiler-425212-b5 
+          gcloud container clusters get-credentials gke-appointee-gwe-dev-ueshiba --zone europe-west1 --project rich-compiler-425212-b5
 
-      - name: Deploy to GKE
+      - name: Deploy to GKE        
         run: |
           kubectl apply -f ./deployment.yaml
