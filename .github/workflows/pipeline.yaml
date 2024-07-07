@@ -8,20 +8,17 @@ on:
 permissions:
   id-token: write
   contents: read
+
 jobs:
   build:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v2
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
-        with:
-          install: true
-
-      - name: Install QEMU
-        uses: docker/setup-qemu-action@v2
 
       - name: Login to Google Cloud
         uses: google-github-actions/auth@v1
@@ -43,7 +40,7 @@ jobs:
 
   deploy:
     needs: build
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
 
     steps:
       - name: Checkout repository
@@ -55,13 +52,6 @@ jobs:
           workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
           service_account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
 
-      - name: Install gcloud CLI
-        run: |
-          echo "deb [signed-by=/usr/share/keyrings/cloud.google.gpg] http://packages.cloud.google.com/apt cloud-sdk main" | sudo tee -a /etc/apt/sources.list.d/google-cloud-sdk.list
-          sudo apt-get install apt-transport-https ca-certificates gnupg
-          curl https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo apt-key --keyring /usr/share/keyrings/cloud.google.gpg add -
-          sudo apt-get update && sudo apt-get install google-cloud-sdk -y
-
       - name: Install kubectl
         run: |
           sudo apt-get update
@@ -71,6 +61,10 @@ jobs:
         run: |
           gcloud container clusters get-credentials gke-appointee-gwe-dev-ueshiba --zone europe-west1 --project rich-compiler-425212-b5
 
-      - name: Deploy to GKE
+      - name: Update deployment image
+        run: |
+          kubectl set image deployment/api-deployment api-container=europe-west1-docker.pkg.dev/rich-compiler-425212-b5/appointee/api:${{ github.sha }}
+
+      - name: Apply Kubernetes manifests
         run: |
           kubectl apply -f ./deployment.yaml
