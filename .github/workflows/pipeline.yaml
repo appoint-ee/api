@@ -25,7 +25,6 @@ jobs:
       - name: Install QEMU
         uses: docker/setup-qemu-action@v2
 
-
       - name: Login to Google Cloud
         uses: google-github-actions/auth@v1
         with:
