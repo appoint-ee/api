@@ -29,6 +29,9 @@ jobs:
       - name: Configure docker to use the gcloud command-line tool as a credential helper
         run: |
           gcloud auth configure-docker europe-west1-docker.pkg.dev
+          gcloud components update
+          gcloud auth login
+          gcloud auth configure-docker
 
       - name: Build and push Docker image
         run: |
