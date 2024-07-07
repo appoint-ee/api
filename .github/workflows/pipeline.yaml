@@ -11,7 +11,7 @@ permissions:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
 
     steps:
       - name: Checkout repository
@@ -19,6 +19,11 @@ jobs:
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
+        with:
+          install: true
+
+      - name: Install QEMU
+        uses: docker/setup-qemu-action@v2
 
       - name: Login to Google Cloud
         uses: google-github-actions/auth@v1
@@ -28,17 +33,19 @@ jobs:
 
       - name: Configure docker to use the gcloud command-line tool as a credential helper
         run: |
-          gcloud auth login
           gcloud auth configure-docker europe-west1-docker.pkg.dev
-          
-      - name: Build and push Docker image
+
+      - name: Build Docker image
         run: |
-          docker build -t europe-west1-docker.pkg.dev/rich-compiler-425212-b5/appointee/api:latest .
-          docker push europe-west1-docker.pkg.dev/rich-compiler-425212-b5/appointee/api:latest
+          docker build -t europe-west1-docker.pkg.dev/rich-compiler-425212-b5/appointee/api:${{ github.sha }} .
+
+      - name: Push Docker image
+        run: |
+          docker push europe-west1-docker.pkg.dev/rich-compiler-425212-b5/appointee/api:${{ github.sha }}
 
   deploy:
     needs: build
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
 
     steps:
       - name: Checkout repository
@@ -49,6 +56,13 @@ jobs:
         with:
           workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
           service_account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
+
+      - name: Install gcloud CLI
+        run: |
+          echo "deb [signed-by=/usr/share/keyrings/cloud.google.gpg] http://packages.cloud.google.com/apt cloud-sdk main" | sudo tee -a /etc/apt/sources.list.d/google-cloud-sdk.list
+          sudo apt-get install apt-transport-https ca-certificates gnupg
+          curl https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo apt-key --keyring /usr/share/keyrings/cloud.google.gpg add -
+          sudo apt-get update && sudo apt-get install google-cloud-sdk -y
 
       - name: Install kubectl
         run: |
@@ -59,6 +73,6 @@ jobs:
         run: |
           gcloud container clusters get-credentials gke-appointee-gwe-dev-ueshiba --zone europe-west1 --project rich-compiler-425212-b5
 
-      - name: Deploy to GKE        
+      - name: Deploy to GKE
         run: |
           kubectl apply -f ./deployment.yaml
