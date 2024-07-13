@@ -34,9 +34,9 @@ public class DataContext : DbContext
             entity.Property(e => e.Description)
                 .HasColumnName("description");
             
-            entity.Property(e => e.Status)
-                .HasColumnName("status")      
-                .HasMaxLength(20);
+            entity.Property(e => e.ExternalId)
+                .HasColumnName("external_id")      
+                .HasMaxLength(1024);
 
             entity.Property(e => e.StartTime)
                 .HasColumnName("start_time")
@@ -77,8 +77,8 @@ public class DataContext : DbContext
                 .IsRequired();
 
             entity.Property(e => e.Status)
-                .HasColumnName("status")      
-                .HasMaxLength(20);
+                .HasColumnName("status")
+                .HasConversion<int>();
 
             entity.Property(e => e.CreatedAt)
                 .HasColumnName("created_at")

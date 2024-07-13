@@ -20,9 +20,9 @@ public class SlotsController : ApiControllerBase
     }
 
     [HttpGet("time")] 
-    public ActionResult<List<TimeSlot>> GetTimeSlots([FromQuery] string userName, DateTime start, DateTime end)
+    public async Task<ActionResult<List<TimeSlot>>> GetTimeSlots([FromQuery] string userName, DateTime start, DateTime end)
     {
-        var meetings = _meetingService.Get(userName, start, end);
+        var meetings = await _meetingService.Get(userName, start, end);
 
         var timeSlots = _slotService.GenerateTimeSlots(start, end, meetings);
 
@@ -30,9 +30,9 @@ public class SlotsController : ApiControllerBase
     }
     
     [HttpGet("day")]
-    public ActionResult<List<DaySlot>> GetDaySlots([FromQuery] string userName, DateTime start, DateTime end)
+    public async Task<ActionResult<List<DaySlot>>> GetDaySlots([FromQuery] string userName, DateTime start, DateTime end)
     {
-        var meetings = _meetingService.Get(userName, start, end);
+        var meetings = await _meetingService.Get(userName, start, end);
 
         var daySlots = _slotService.GenerateDaySlots(start, end, meetings);
 

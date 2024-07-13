@@ -25,9 +25,9 @@ public class MeetingsController : ApiControllerBase
     }
     
     [HttpGet]
-    public ActionResult<List<GetMeetingResponse>?> Get([FromQuery] string userName, DateTime start, DateTime end)
+    public async Task<ActionResult<List<GetMeetingResponse>?>> Get([FromQuery] string userName, DateTime start, DateTime end)
     {
-        var meeting = _meetingService.Get(userName, start, end);
+        var meeting = await _meetingService.Get(userName, start, end);
 
         if (meeting == null)
         {

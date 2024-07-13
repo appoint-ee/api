@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using api.Data.Enums;
 
 namespace api.Data.Entities;
 
@@ -20,8 +21,7 @@ public class MeetingAttendee
     [ForeignKey("MeetingId")]
     public Meeting Meeting { get; set; }
 
-    [StringLength(20)]
-    public string Status { get; set; }
+    public AttendeeStatus Status { get; set; }
     
     [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
     public DateTime CreatedAt { get; set; }

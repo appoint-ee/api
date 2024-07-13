@@ -1,17 +1,28 @@
+using System.Globalization;
 using api.Controllers.Models;
 using api.Data;
 using api.Data.Entities;
+using api.Data.Enums;
+using api.Extensions;
+using api.Models;
+using static System.Enum;
 
 namespace api.Services;
 
 public class MeetingService : IMeetingService
 {
     private readonly DataContext _dataContext;
-
+    private readonly IGoogleAuthService _googleAuthService;
+    private readonly IGoogleEventService _googleEventService;
+    
     public MeetingService(
-        DataContext dataContext)
+        DataContext dataContext,
+        IGoogleAuthService googleAuthService,
+        IGoogleEventService googleEventService)
     {
         _dataContext = dataContext ?? throw new ArgumentNullException(nameof(dataContext));
+        _googleAuthService = googleAuthService ?? throw new ArgumentNullException(nameof(googleAuthService));
+        _googleEventService = googleEventService ?? throw new ArgumentNullException(nameof(googleEventService));
     }
 
     public void Create(CreateMeetingRequest request)
@@ -23,28 +34,11 @@ public class MeetingService : IMeetingService
             throw new Exception("Participant not found!");
         }
 
-        var user = _dataContext.Users.SingleOrDefault(x => x.EmailAddress == request.CreatorEmailAddress);
-
-        if (user == null)
-        {
-            user = new User()
-            {
-                EmailAddress = request.CreatorEmailAddress,
-                FirstName = request.CreatorFirstName,
-                LastName = request.CreatorLastName,
-                UserName = $"{request.CreatorFirstName} {request.CreatorLastName}", // TODO: uniqueness check
-                Status = "Created",
-                CreatedAt = DateTime.UtcNow
-            };
-
-            _dataContext.Users.Add(user);
-        }
-
         var meeting = new Meeting()
         {
             Title = request.Title,
             Description = request.Description,
-            Status = "Created",
+            ExternalId = request.ExternalId,
             StartTime = request.StartTime,
             EndTime = request.EndTime,
             CreatedAt = DateTime.UtcNow
@@ -56,27 +50,47 @@ public class MeetingService : IMeetingService
         {
             new()
             {
-                User = user,
-                IsCreator = true,
-                Status = "Pending",
-                CreatedAt = DateTime.UtcNow,
-                Meeting = meeting
-            },
-            new()
-            {
                 UserId = request.ParticipantId,
                 IsCreator = true,
-                Status = "Pending",
                 CreatedAt = DateTime.UtcNow,
                 Meeting = meeting
             }
         };
         
+        if (!string.IsNullOrWhiteSpace(request.CreatorEmailAddress))
+        {
+            var user = _dataContext.Users.SingleOrDefault(x => x.EmailAddress == request.CreatorEmailAddress);
+
+            if (user == null)
+            {
+                user = new User()
+                {
+                    EmailAddress = request.CreatorEmailAddress,
+                    FirstName = request.CreatorFirstName,
+                    LastName = request.CreatorLastName,
+                    UserName = $"{request.CreatorFirstName} {request.CreatorLastName}", // TODO: uniqueness check
+                    Status = "Created",
+                    CreatedAt = DateTime.UtcNow
+                };
+
+                _dataContext.Users.Add(user);
+            }
+            
+            attendees.Add(
+                new()
+                { 
+                    User = user, 
+                    IsCreator = true, 
+                    CreatedAt = DateTime.UtcNow, 
+                    Meeting = meeting
+                });
+        }
+        
         _dataContext.MeetingAttendees.AddRange(attendees);
         _dataContext.SaveChanges();
     }
 
-    public List<GetMeetingResponse>? Get(string userName, DateTime start, DateTime end)
+    public async Task<List<GetMeetingResponse>?> Get(string userName, DateTime timeMin, DateTime timeMax)
     {
         var user = _dataContext.Users.SingleOrDefault(x => x.UserName == userName);
 
@@ -84,23 +98,159 @@ public class MeetingService : IMeetingService
         {
             return null;
         }
+        
+        await SyncWithGoogleCalendar(userName);
 
         var meetings = _dataContext.MeetingAttendees
             .Where(x => x.UserId == user.Id)
             .Select(x => x.Meeting)
-            .Where(m => m.StartTime < start && start < m.EndTime
-                        || start < m.StartTime && m.EndTime < end
-                        || m.StartTime < end && end < m.EndTime)
+            .Where(m => m.StartTime < timeMin && timeMin < m.EndTime
+                        || timeMin < m.StartTime && m.EndTime < timeMax
+                        || m.StartTime < timeMax && timeMax < m.EndTime)
             .Select( m => new GetMeetingResponse()
             {
                 Id = m.Id,
                 Title = m.Title,
                 Description = m.Description,
-                Status = m.Status,
                 StartTime = m.StartTime,
                 EndTime = m.EndTime
             }).ToList();
 
         return meetings;
+    }
+    
+    private async Task SyncWithGoogleCalendar(string userName)
+    {
+        var startTime = DateTime.Today.AddMonths(-1);
+        var endTime = DateTime.Today.AddYears(1);
+        
+        var googleAuth = _googleAuthService.Get(userName); // TODO: Combine Get and Update methods
+
+        if (googleAuth != null
+            && !string.IsNullOrWhiteSpace(googleAuth.RefreshToken))
+        {
+            try
+            {
+                var accessToken = await _googleAuthService.Update(googleAuth.UserId, googleAuth.RefreshToken);
+
+                var googleMeetings = await _googleEventService.Get(
+                    accessToken, 
+                    startTime.ToString("yyyy-MM-ddTHH:mm:sszzz"), 
+                    endTime.ToString("yyyy-MM-ddTHH:mm:sszzz")); // TODO: return directly meetings instead
+
+                if (!string.IsNullOrWhiteSpace(googleMeetings.Content))
+                {
+                    var apiResponse = googleMeetings.Content.DeserializeFromCamelCase<GoogleCalendarEvents>();
+
+                    if (apiResponse != null && apiResponse.Items.Count > 0)
+                    {
+                        var items = apiResponse.Items.Where(x => x.Recurrence == null).ToList(); // TODO: Handle recurring events
+
+                        await UpdateGoogleMeetings(googleAuth.UserId,
+                            items, 
+                            startTime.ToUniversalTime(), 
+                            endTime.ToUniversalTime(),
+                            apiResponse.TimeZone);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                // TODO: Log the exception
+            }
+        }
+    }
+    
+    private async Task UpdateGoogleMeetings(long userId,  List<GoogleCalendarEventItem> googleEvents, DateTime timeMin, DateTime timeMax, string timeZone)
+    {
+        var meetings = _dataContext.MeetingAttendees
+            .Where(x => x.UserId == userId)
+            .Select(x => x.Meeting)
+            .Where(m => m.StartTime <= timeMin && timeMin <= m.EndTime
+                        || m.StartTime >= timeMin && timeMax >= m.EndTime
+                        || m.StartTime <= timeMax && timeMax <= m.EndTime
+                        || timeMin <= m.StartTime && m.EndTime <= timeMax)
+            .ToList();
+
+        foreach (var googleEvent in googleEvents)
+        { 
+            var startTime= GetGoogleEventTimes(googleEvent.Start, timeZone); 
+            var endTime= GetGoogleEventTimes(googleEvent.End, timeZone);
+            
+            if (startTime is null
+                || endTime is null) 
+            { 
+                continue;
+            }
+                
+            var meeting = meetings.FirstOrDefault(x => x.ExternalId == googleEvent.Id);
+            
+            if (meeting == null)
+            {
+                var tryStatusParse = TryParse(googleEvent.Status, true, out AttendeeStatus attendeeStatus);
+                
+                if (!tryStatusParse) 
+                { 
+                    // TODO: Log exception
+                }
+                
+                meeting = new Meeting() 
+                {
+                    Title = googleEvent.Summary, 
+                    StartTime = startTime!.Value, 
+                    EndTime = endTime!.Value, 
+                    ExternalId = googleEvent.Id, 
+                    Description = googleEvent.Description ?? "", 
+                    CreatedAt = DateTime.UtcNow
+                };
+                    
+                var attendees = new List<MeetingAttendee>() 
+                { 
+                    new() 
+                    { 
+                        UserId = userId, 
+                        IsCreator = true, 
+                        Status = attendeeStatus, 
+                        CreatedAt = DateTime.UtcNow, 
+                        Meeting = meeting
+                    } 
+                };
+
+                _dataContext.Meetings.Add(meeting); 
+                _dataContext.MeetingAttendees.AddRange(attendees);
+            }
+            else if (meeting.StartTime != startTime!.Value 
+                    || meeting.EndTime != endTime!.Value
+                    || meeting.Title != googleEvent.Summary)
+            {
+                meeting.StartTime = startTime!.Value; 
+                meeting.EndTime = endTime!.Value;
+                meeting.Title = googleEvent.Summary; 
+                meeting.Description = googleEvent.Description;
+            }
+        }
+
+        await _dataContext.SaveChangesAsync();
+    }
+
+    private static DateTime? GetGoogleEventTimes(GoogleCalendarEventDateTime googleCalendarEventDateTime, string timeZone)
+    {
+        if (googleCalendarEventDateTime.DateTime.HasValue)
+        {
+            return TimeZoneInfo.ConvertTimeToUtc(googleCalendarEventDateTime.DateTime.Value);
+        }
+
+        if (!DateTime.TryParseExact(googleCalendarEventDateTime.Date,
+                "yyyy-MM-dd",
+                CultureInfo.InvariantCulture,
+                DateTimeStyles.None,
+                out var parsedDateTime))
+        {
+            return null;
+        }
+        
+        var timeZoneInfo = TimeZoneInfo.FindSystemTimeZoneById(timeZone);
+        
+        return TimeZoneInfo.ConvertTimeToUtc(parsedDateTime, timeZoneInfo);
     }
 }

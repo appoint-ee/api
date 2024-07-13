@@ -34,11 +34,22 @@ public class GoogleEventService : IGoogleEventService
         return response;    
     }
 
-    public async Task<RestResponse> Get(string accessToken)
+    public async Task<RestResponse> Get(string accessToken, string? timeMin = null, string? timeMax = null)
     {
         var request = new RestRequest(ApiUrl);
         
         request.AddQueryParameter("key", _configuration["GoogleAPI:Key"]);
+
+        if (!string.IsNullOrWhiteSpace(timeMin)) // TODO: regex check
+        {
+            request.AddQueryParameter("timeMin", timeMin);
+        }
+        
+        if (!string.IsNullOrWhiteSpace(timeMax))
+        {
+            request.AddQueryParameter("timeMax", timeMax);
+        }
+        
         request.AddHeader("Authorization", $"Bearer {accessToken}");
         request.AddHeader("Accept", "application/json");
 
