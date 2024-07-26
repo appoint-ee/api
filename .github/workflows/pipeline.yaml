@@ -1,77 +1,41 @@
-name: Build and Deploy to GKE
+name: AppointeeApi
 
 on:
   push:
-    branches:
-      - main
-  workflow_dispatch: # Manuel tetikleme
-
-permissions:
-  id-token: write
-  contents: read
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
 
 jobs:
+
   build:
+
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v3
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v2
-        with:
-          driver: docker-container
-
-      - name: Login to Google Cloud
-        uses: google-github-actions/auth@v1
-        with:
-          workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
-          service_account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
-
-      - name: Configure docker to use the gcloud command-line tool as a credential helper
-        run: |
-          gcloud auth configure-docker europe-west1-docker.pkg.dev
-
-      - name: Cache Docker layers
-        uses: actions/cache@v3
-        with:
-          path: /tmp/.buildx-cache
-          key: ${{ runner.os }}-buildx-${{ github.sha }}
-          restore-keys: |
-            ${{ runner.os }}-buildx-
-
-      - name: Build Docker image
-        run: |
-          docker buildx build --cache-from type=local,src=/tmp/.buildx-cache --cache-to type=local,dest=/tmp/.buildx-cache-new -t europe-west1-docker.pkg.dev/rich-compiler-425212-b5/appointee/api:${{ github.sha }} --push .
+    - uses: actions/checkout@v3
+    - name: Build the Docker image
+      run: docker build . --file Dockerfile --tag api:$(date +%s)
+    - name: Log in to DigitalOcean Container Registry
+      run: echo "${{ secrets.DIGITALOCEAN_REGISTRY_TOKEN }}" | docker login -u ${{ secrets.DIGITALOCEAN_REGISTRY_USERNAME }} --password-stdin registry.digitalocean.com
+    - name: Push Docker image to DigitalOcean Container Registry
+      run: docker pull registry.digitalocean.com/docr-appointee/api
+    - name: Push Docker image to DigitalOcean Container Registry
+      run: docker push registry.digitalocean.com/docr-appointee/api
 
   deploy:
-    needs: build
     runs-on: ubuntu-latest
-
+    needs: build
+    
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v3
+    - name: Checkout repository
+      uses: actions/checkout@v2
 
-      - name: Login to Google Cloud
-        uses: google-github-actions/auth@v1
-        with:
-          workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
-          service_account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
+    - name: Set up kubectl
+      uses: azure/k8s-set-context@v1
+      with:
+        kubeconfig: ${{ secrets.KUBE_CONFIG_DATA }}
 
-      - name: Install kubectl
-        uses: azure/setup-kubectl@v3
-        with:
-          version: 'latest'
-
-      - name: Configure kubectl
-        run: |
-          gcloud container clusters get-credentials gke-appointee-gwe-dev-ueshiba --zone europe-west1 --project rich-compiler-425212-b5
-
-      - name: Update deployment image
-        run: |
-          kubectl set image deployment/api-deployment api-container=europe-west1-docker.pkg.dev/rich-compiler-425212-b5/appointee/api:${{ github.sha }}
-
-      - name: Apply Kubernetes manifests
-        run: |
-          kubectl apply -f ./deployment.yaml
+    - name: Deploy to Kubernetes
+      run: |
+        kubectl apply -f deployment.yaml
