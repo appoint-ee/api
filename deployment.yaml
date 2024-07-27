@@ -21,9 +21,9 @@ spec:
         - name: GoogleAPI__Key
           value: "AIzaSyCkSKM3cIARzBXU_VYFCAx0dbNIABniQoI"
         - name: WebUrl
-          value: "https://appoint.ee"
+          value: "appoint.ee"
         ports:
-        - containerPort: 8080
+        - containerPort: 80
         # resources:
         #   requests:
         #     memory: "64Mi"
@@ -31,6 +31,7 @@ spec:
         #   limits:
         #     memory: "128Mi"
         #     cpu: "500m"
+        
 ---
 apiVersion: v1
 kind: Service
@@ -42,5 +43,4 @@ spec:
   ports:
     - protocol: TCP
       port: 80
-      targetPort: 8080
-  type: LoadBalancer
+      targetPort: 80
