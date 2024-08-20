@@ -14,7 +14,7 @@ public class Meeting
     public string Description { get; set; }
 
     [StringLength(1024)]
-    public string ExternalId { get; set; }
+    public string? ExternalId { get; set; }
 
     [Required]
     public DateTime StartTime { get; set; }

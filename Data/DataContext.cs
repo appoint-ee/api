@@ -40,18 +40,22 @@ public class DataContext : DbContext
 
             entity.Property(e => e.StartTime)
                 .HasColumnName("start_time")
+                .HasColumnType("timestamp without time zone")
                 .IsRequired();
 
             entity.Property(e => e.EndTime)
                 .HasColumnName("end_time")
+                .HasColumnType("timestamp without time zone")
                 .IsRequired();
 
             entity.Property(e => e.CreatedAt)
                 .HasColumnName("created_at")
+                .HasColumnType("timestamp without time zone")
                 .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
             entity.Property(e => e.UpdatedAt)
                 .HasColumnName("updated_at")
+                .HasColumnType("timestamp without time zone")
                 .HasDefaultValueSql("CURRENT_TIMESTAMP");
         });
         
@@ -82,10 +86,12 @@ public class DataContext : DbContext
 
             entity.Property(e => e.CreatedAt)
                 .HasColumnName("created_at")
+                .HasColumnType("timestamp without time zone")
                 .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
             entity.Property(e => e.UpdatedAt)
                 .HasColumnName("updated_at")
+                .HasColumnType("timestamp without time zone")
                 .HasDefaultValueSql("CURRENT_TIMESTAMP");
         });
         
@@ -146,10 +152,12 @@ public class DataContext : DbContext
             
             entity.Property(e => e.CreatedAt)
                 .HasColumnName("created_at")
+                .HasColumnType("timestamp without time zone")
                 .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
             entity.Property(e => e.UpdatedAt)
                 .HasColumnName("updated_at")
+                .HasColumnType("timestamp without time zone")
                 .HasDefaultValueSql("CURRENT_TIMESTAMP");
         });
         
