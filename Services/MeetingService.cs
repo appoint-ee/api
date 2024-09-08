@@ -41,7 +41,7 @@ public class MeetingService : IMeetingService
             ExternalId = request.ExternalId,
             StartTime = request.StartTime,
             EndTime = request.EndTime,
-            CreatedAt = DateTime.UtcNow
+            CreatedAt = DateTime.Now
         };
         
         _dataContext.Meetings.Add(meeting);
@@ -52,7 +52,7 @@ public class MeetingService : IMeetingService
             {
                 UserId = request.ParticipantId,
                 IsCreator = true,
-                CreatedAt = DateTime.UtcNow,
+                CreatedAt = DateTime.Now,
                 Meeting = meeting
             }
         };
@@ -70,7 +70,7 @@ public class MeetingService : IMeetingService
                     LastName = request.CreatorLastName,
                     UserName = $"{request.CreatorFirstName} {request.CreatorLastName}", // TODO: uniqueness check
                     Status = "Created",
-                    CreatedAt = DateTime.UtcNow
+                    CreatedAt = DateTime.Now
                 };
 
                 _dataContext.Users.Add(user);
@@ -81,7 +81,7 @@ public class MeetingService : IMeetingService
                 { 
                     User = user, 
                     IsCreator = true, 
-                    CreatedAt = DateTime.UtcNow, 
+                    CreatedAt = DateTime.Now, 
                     Meeting = meeting
                 });
         }
@@ -201,7 +201,7 @@ public class MeetingService : IMeetingService
                     EndTime = endTime!.Value, 
                     ExternalId = googleEvent.Id, 
                     Description = googleEvent.Description ?? "", 
-                    CreatedAt = DateTime.UtcNow
+                    CreatedAt = DateTime.Now
                 };
                     
                 var attendees = new List<MeetingAttendee>() 
@@ -211,7 +211,7 @@ public class MeetingService : IMeetingService
                         UserId = userId, 
                         IsCreator = true, 
                         Status = attendeeStatus, 
-                        CreatedAt = DateTime.UtcNow, 
+                        CreatedAt = DateTime.Now, 
                         Meeting = meeting
                     } 
                 };

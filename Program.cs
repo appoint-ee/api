@@ -1,5 +1,6 @@
 using api.Data;
 using api.Services;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
 using RestSharp;
@@ -53,6 +54,11 @@ builder.Services.AddSwaggerGen(c =>
 builder.Services.AddDbContext<DataContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
+builder.Services.AddAuthorization();
+
+builder.Services.AddIdentityApiEndpoints<IdentityUser>()
+    .AddEntityFrameworkStores<DataContext>();
+
 builder.Services.AddTransient<IRestClient, RestClient>();
 
 builder.Services.AddScoped<IGoogleAuthService, GoogleAuthService>();
@@ -73,6 +79,14 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+
+app.MapIdentityApi<IdentityUser>();
+
+app.MapPost("/logout", async (SignInManager<IdentityUser> signInManager) => // cookie ile logout yapıypr ama beareri logout yapmıyor
+{
+    await signInManager.SignOutAsync().ConfigureAwait(false);
+});
+
 
 app.UseAuthorization();
 

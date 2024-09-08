@@ -1,9 +1,11 @@
 using api.Data.Entities;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 
 namespace api.Data;
 
-public class DataContext : DbContext
+public class DataContext : IdentityDbContext<IdentityUser>
 {
     public DataContext(DbContextOptions<DataContext> options) : base(options) {}
 
@@ -103,12 +105,12 @@ public class DataContext : DbContext
 
             entity.Property(e => e.Id)
                 .HasColumnName("id")
-                .HasDefaultValueSql("uuid_generate_v4()");
+                .ValueGeneratedOnAdd();
 
             entity.Property(e => e.UserName)
                 .HasColumnName("user_name")
                 .IsRequired()
-                .HasMaxLength(10);
+                .HasMaxLength(50);
             
             entity.Property(e => e.FirstName)
                 .HasColumnName("first_name")

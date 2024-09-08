@@ -8,7 +8,7 @@ public class User
     [Key]
     public long Id { get; set; }
 
-    [Required, StringLength(30)]
+    [Required, StringLength(50)]
     public string UserName { get; set; }
     
     [Required, StringLength(50)]
@@ -21,7 +21,7 @@ public class User
     [EmailAddress]
     public string EmailAddress { get; set; }
 
-    public string PhotoUrl { get; set; }
+    public string? PhotoUrl { get; set; }
 
     [StringLength(20)]
     public string Status { get; set; }
