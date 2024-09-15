@@ -28,4 +28,19 @@ public class UsersController : ApiControllerBase
 
         return user;
     }
+
+    [HttpPut("{id}/availability-hours")]
+    public async Task<ActionResult> UpdateAvailabilityHours([FromRoute] long id, [FromBody] List<UpdateAvailabilityHoursRequest> request)
+    {
+        var exist = await _userService.Exists(id);
+
+        if (!exist)
+        {
+            return NotFound();
+        }
+
+        var isSuccess = await _userService.UpdateAvailabilityHours(id, request);
+
+        return isSuccess ? Ok() : StatusCode(500);
+    }
 }

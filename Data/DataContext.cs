@@ -13,6 +13,7 @@ public class DataContext : IdentityDbContext<IdentityUser>
     public DbSet<MeetingAttendee> MeetingAttendees { get; set; }
     public DbSet<User> Users { get; set; }
     public DbSet<GoogleAuth> GoogleAuths { get; set; }
+    public DbSet<AvailabilityHour> AvailabilityHours { get; set; }
     
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -201,6 +202,39 @@ public class DataContext : IdentityDbContext<IdentityUser>
             entity.Property(e => e.IdToken)
                 .HasColumnName("id_token")
                 .IsRequired();
+        });
+        
+        modelBuilder.Entity<AvailabilityHour>(entity =>
+        {
+            entity.ToTable("availability_hours");
+
+            entity.HasKey(e => e.Id);
+
+            entity.Property(e => e.Id)
+                .HasColumnName("id")
+                .HasDefaultValueSql("uuid_generate_v4()");
+            
+            entity.Property(e => e.UserId)
+                .HasColumnName("user_id")
+                .IsRequired();
+            
+            entity.Property(e => e.DayOfWeek)
+                .HasColumnName("day_of_week");
+
+            entity.Property(e => e.StartTime)
+                .HasColumnName("start_time")
+                .HasColumnType("time without time zone")
+                .IsRequired();
+
+            entity.Property(e => e.EndTime)
+                .HasColumnName("end_time")
+                .HasColumnType("time without time zone")
+                .IsRequired();
+
+            entity.Property(e => e.CreatedAt)
+                .HasColumnName("created_at")
+                .HasColumnType("timestamp without time zone")
+                .HasDefaultValueSql("CURRENT_TIMESTAMP");
         });
     }
 }

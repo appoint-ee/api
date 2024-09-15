@@ -1,5 +1,0 @@
-### GET
-
-GET http://localhost:5074/People
-Authorization: Bearer {{access_token}}
-

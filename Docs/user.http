@@ -1,0 +1,19 @@
+### GET
+
+GET http://localhost:5074/Users/recepcil
+Authorization: Bearer {{access_token}}
+
+### UPDATE
+
+PUT http://localhost:5074/Users/3/availability-hours
+Authorization: Bearer {{access_token}}
+Accept: */*
+Content-Type: application/json
+
+[
+  {
+    "dayOfWeek": 1,
+    "startTime": "09:00:00",
+    "endTime": "17:00:00"
+  }
+]
