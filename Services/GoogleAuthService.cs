@@ -108,10 +108,10 @@ public class GoogleAuthService : IGoogleAuthService
         return accessToken;
     }
 
-    public GetGoogleAuthResponse? Get(string userName)
+    public GetGoogleAuthResponse? Get(long userId)
     {
         return _dataContext.Users
-            .Where(u => u.UserName == userName)
+            .Where(u => u.Id == userId)
             .Join(_dataContext.GoogleAuths,
                 user => user.Id,
                 auth => auth.UserId,

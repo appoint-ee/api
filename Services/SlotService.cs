@@ -1,62 +1,71 @@
 using api.Controllers.Models;
+using api.Data;
 using api.Models;
 
 namespace api.Services;
 
 public class SlotService : ISlotService
 {
-    public List<TimeSlot> GenerateTimeSlots(DateTime startDateTime, DateTime endDateTime, IList<GetMeetingResponse>? meetings)
-    { 
-         var timeSlots = new List<TimeSlot>();
-         var startWorkingTime = new TimeSpan(9, 0, 0);
-         var endWorkingTime = new TimeSpan(17, 0, 0);
-         var currentDateTime = startDateTime;
-         
-         while (currentDateTime < endDateTime)
-         {
-             var nextDateTime = currentDateTime.AddHours(1);
+    private readonly DataContext _context;
 
-             var isWorkingDay = currentDateTime.DayOfWeek is not DayOfWeek.Saturday and not DayOfWeek.Sunday;
+    public SlotService(DataContext context)
+    {
+        _context = context ?? throw new ArgumentNullException(nameof(context));
+    }
+    
+    public List<TimeSlot> GenerateTimeSlots(long userId, DateTime start, DateTime end, IList<GetMeetingResponse>? meetings)
+    {
+        var timeSlots = new List<TimeSlot>();
+        var timeIncrement = TimeSpan.FromHours(1);
 
-             var isWorkingHours = currentDateTime.TimeOfDay >= startWorkingTime 
-                                  && currentDateTime.TimeOfDay < endWorkingTime;
+        var userAvailabilityHours = _context.AvailabilityHours.Where(x => x.UserId == userId).ToList();
+        
+        while (start.Date <= end.Date)        
+        {
+            var dailyAvailabilityHours = userAvailabilityHours.Where(x => x.DayOfWeek == (int)start.DayOfWeek).ToList();
 
-             if (!isWorkingDay || !isWorkingHours)
-             {
-                 currentDateTime = nextDateTime;
-                 continue;
-             }
+            foreach (var dailyAvailabilityHour in dailyAvailabilityHours)
+            {
+                var currentIteration = new DateTime(start.Year, start.Month, start.Day, dailyAvailabilityHour.StartTime.Hour, 0, 0);
+                var endIteration = new DateTime(start.Year, start.Month, start.Day, dailyAvailabilityHour.EndTime.Hour, 0, 0);
+                
+                for (; currentIteration < endIteration; currentIteration = currentIteration.Add(timeIncrement))
+                {
+                    var nextIteration = currentIteration.Add(timeIncrement);
+                    
+                    var isBooked = meetings != null && meetings.Any(m =>
+                        m.StartTime < currentIteration && currentIteration < m.EndTime       
+                        || currentIteration < m.StartTime &&  m.EndTime < nextIteration       
+                        || currentIteration == m.StartTime &&  m.EndTime == nextIteration       
+                        || m.StartTime < nextIteration && nextIteration < m.EndTime);        
 
-             var isBooked = meetings != null && meetings.Any(m =>
-                 m.StartTime < currentDateTime && currentDateTime < m.EndTime       
-                 || currentDateTime < m.StartTime &&  m.EndTime < nextDateTime       
-                 || currentDateTime == m.StartTime &&  m.EndTime == nextDateTime       
-                 || m.StartTime < nextDateTime && nextDateTime < m.EndTime);        
+                    var status = isBooked ? "booked" : "available";
+                    
+                    timeSlots.Add(
+                        new TimeSlot()
+                        {
+                            StartTime = currentIteration,
+                            EndTime = nextIteration,
+                            Status = status
+                        });
+                }
+            }
 
-             var status = isBooked ? "booked" : "available";
-                 
-             timeSlots.Add(new TimeSlot
-             {
-                 StartTime = currentDateTime,
-                 EndTime = nextDateTime,
-                 Status = status
-             });
+            start = start.AddDays(1);
+        }
 
-             currentDateTime = nextDateTime;
-         }
-         
-         return timeSlots;
+        return timeSlots;
     }
 
-    public List<DaySlot> GenerateDaySlots(DateTime startDateTime, DateTime endDateTime, IList<GetMeetingResponse>? meetings)
+    public List<DaySlot> GenerateDaySlots(long userId, DateTime start, DateTime end, IList<GetMeetingResponse>? meetings)
     { 
         var daySlots = new List<DaySlot>();
         
-        var timeSlots = GenerateTimeSlots(startDateTime, endDateTime, meetings);
+        var timeSlots = GenerateTimeSlots(userId, start, end, meetings);
 
-        var currentDate = startDateTime.Date;
+        var currentDate = start.Date;
 
-        while (currentDate < endDateTime.Date)
+        while (currentDate < end.Date)
         {
             var currentDayTimeSlots =
                 timeSlots.Where(x => x.StartTime.Date == currentDate || x.EndTime.Date == currentDate).ToArray();

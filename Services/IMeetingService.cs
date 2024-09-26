@@ -5,5 +5,5 @@ namespace api.Services;
 public interface IMeetingService
 {
     void Create(CreateMeetingRequest request);
-    Task<List<GetMeetingResponse>?> Get(string userName, DateTime timeMin, DateTime timeMax);
+    Task<List<GetMeetingResponse>?> Get(long userId, DateTime timeMin, DateTime timeMax);
 }

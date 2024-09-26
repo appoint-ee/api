@@ -90,19 +90,12 @@ public class MeetingService : IMeetingService
         _dataContext.SaveChanges();
     }
 
-    public async Task<List<GetMeetingResponse>?> Get(string userName, DateTime timeMin, DateTime timeMax)
+    public async Task<List<GetMeetingResponse>?> Get(long userId, DateTime timeMin, DateTime timeMax)
     {
-        var user = _dataContext.Users.SingleOrDefault(x => x.UserName == userName);
-
-        if (user == null)
-        {
-            return null;
-        }
-        
-        await SyncWithGoogleCalendar(userName);
+        await SyncWithGoogleCalendar(userId); 
 
         var meetings = _dataContext.MeetingAttendees
-            .Where(x => x.UserId == user.Id)
+            .Where(x => x.UserId == userId)
             .Select(x => x.Meeting)
             .Where(m => m.StartTime < timeMin && timeMin < m.EndTime
                         || timeMin < m.StartTime && m.EndTime < timeMax
@@ -119,12 +112,12 @@ public class MeetingService : IMeetingService
         return meetings;
     }
     
-    private async Task SyncWithGoogleCalendar(string userName)
+    private async Task SyncWithGoogleCalendar(long userId)
     {
         var startTime = DateTime.Today.AddMonths(-1);
         var endTime = DateTime.Today.AddYears(1);
         
-        var googleAuth = _googleAuthService.Get(userName); // TODO: Combine Get and Update methods
+        var googleAuth = _googleAuthService.Get(userId); // TODO: Combine Get and Update methods
 
         if (googleAuth != null
             && !string.IsNullOrWhiteSpace(googleAuth.RefreshToken))

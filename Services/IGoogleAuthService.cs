@@ -8,5 +8,5 @@ public interface IGoogleAuthService
 
     Task<string> Update(long userId, string refreshToken);
     
-    GetGoogleAuthResponse? Get(string userName);
+    GetGoogleAuthResponse? Get(long userId);
 }

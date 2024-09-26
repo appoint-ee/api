@@ -35,6 +35,12 @@ public class UserService : IUserService
             .FirstOrDefault();
     }
 
+    public async Task<long?> GetId(string userName)
+    {
+        var user = await _context.Users.SingleOrDefaultAsync(x => x.UserName == userName);
+        return user?.Id;
+    }
+
     public async Task<bool> Exists(long id)
     {
         return await _context.Users
