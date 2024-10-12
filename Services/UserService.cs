@@ -17,6 +17,8 @@ public class UserService : IUserService
     public GetUserByUserNameResponse? Get(string userName)
     {
         return _context.Users
+            .Include(u => u.UserServices)
+            .ThenInclude(us => us.Service)
             .Where(u => u.UserName == userName)
             .Select(u => new GetUserByUserNameResponse()
                 {
@@ -30,7 +32,14 @@ public class UserService : IUserService
                     Address = u.Address,
                     CountryCode = u.CountryCode,
                     LangCode = u.LangCode,
-                    PreferredTimeZone = u.PreferredTimeZone
+                    PreferredTimeZone = u.PreferredTimeZone,
+                    Services = u.UserServices.Select(us => new ServiceDto()
+                    {
+                        Id = us.Service.Id,
+                        Name = us.Service.Name,
+                        Duration = us.Service.Duration,
+                        Price = us.Service.Price
+                    }).ToList() 
                 })
             .FirstOrDefault();
     }

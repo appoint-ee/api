@@ -42,4 +42,6 @@ public class User
 
     [DatabaseGenerated(DatabaseGeneratedOption.Computed)]
     public DateTime UpdatedAt { get; set; }
+    
+    public ICollection<UserService> UserServices { get; set; }
 }

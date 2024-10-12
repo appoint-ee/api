@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace api.Data.Entities;
 
-public class Meeting
+public class Meeting // TODO: consider renaming as appointment
 {
     [Key]
     public Guid Id { get; set; }
@@ -21,6 +21,11 @@ public class Meeting
 
     [Required]
     public DateTime EndTime { get; set; }
+    
+    public long ServiceId { get; set; }
+    
+    [ForeignKey("ServiceId")]
+    public Service Service { get; set; }
     
     [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
     public DateTime CreatedAt { get; set; }

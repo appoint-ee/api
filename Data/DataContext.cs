@@ -12,6 +12,8 @@ public class DataContext : IdentityDbContext<IdentityUser>
     public DbSet<Meeting> Meetings { get; set; }
     public DbSet<MeetingAttendee> MeetingAttendees { get; set; }
     public DbSet<User> Users { get; set; }
+    public DbSet<Service> Services { get; set; }
+    public DbSet<UserService> UserServices { get; set; }
     public DbSet<GoogleAuth> GoogleAuths { get; set; }
     public DbSet<AvailabilityHour> AvailabilityHours { get; set; }
     
@@ -50,6 +52,9 @@ public class DataContext : IdentityDbContext<IdentityUser>
                 .HasColumnName("end_time")
                 .HasColumnType("timestamp without time zone")
                 .IsRequired();
+            
+            entity.Property(e => e.ServiceId)
+                .HasColumnName("service_id");
 
             entity.Property(e => e.CreatedAt)
                 .HasColumnName("created_at")
@@ -159,6 +164,71 @@ public class DataContext : IdentityDbContext<IdentityUser>
                 .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
             entity.Property(e => e.UpdatedAt)
+                .HasColumnName("updated_at")
+                .HasColumnType("timestamp without time zone")
+                .HasDefaultValueSql("CURRENT_TIMESTAMP");
+        });
+        
+        modelBuilder.Entity<Service>(entity =>
+        {
+            entity.ToTable("services");
+            
+            entity.HasKey(e => e.Id);
+
+            entity.Property(e => e.Id)
+                .HasColumnName("id")
+                .ValueGeneratedOnAdd();
+
+            entity.Property(e => e.Name)
+                .HasColumnName("name")
+                .IsRequired()
+                .HasMaxLength(50);
+            
+            entity.Property(e => e.Duration)
+                .HasColumnName("duration")
+                .IsRequired();
+            
+            entity.Property(e => e.Price)
+                .HasColumnName("price")
+                .IsRequired();
+
+            entity.Property(e => e.CreatedAt)
+                .HasColumnName("created_at")
+                .HasColumnType("timestamp without time zone")
+                .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+            entity.Property(e => e.UpdatedAt)
+                .HasColumnName("updated_at")
+                .HasColumnType("timestamp without time zone")
+                .HasDefaultValueSql("CURRENT_TIMESTAMP");
+        });
+        
+        modelBuilder.Entity<UserService>(entity =>
+        {
+            entity.ToTable("user_services");
+            
+            entity.HasKey(us => new { us.UserId, us.ServiceId });
+
+            entity.Property(us => us.UserId)
+                .HasColumnName("user_id"); 
+            
+            entity.HasOne(us => us.User)
+                .WithMany(u => u.UserServices)
+                .HasForeignKey(us => us.UserId);
+
+            entity.Property(us => us.ServiceId)
+                .HasColumnName("service_id");
+
+            entity.HasOne(us => us.Service)
+                .WithMany(s => s.UserServices)
+                .HasForeignKey(us => us.ServiceId);
+
+            entity.Property(us => us.CreatedAt)
+                .HasColumnName("created_at")
+                .HasColumnType("timestamp without time zone")
+                .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+            entity.Property(us => us.UpdatedAt)
                 .HasColumnName("updated_at")
                 .HasColumnType("timestamp without time zone")
                 .HasDefaultValueSql("CURRENT_TIMESTAMP");

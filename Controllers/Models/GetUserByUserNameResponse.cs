@@ -23,4 +23,17 @@ public class GetUserByUserNameResponse
     public string LangCode { get; init; }
 
     public string PreferredTimeZone { get; init; }
+    
+    public List<ServiceDto> Services { get; init; }
+}
+
+public class ServiceDto
+{
+    public long Id { get; init; }
+    
+    public string? Name { get; init; }
+    
+    public TimeSpan Duration { get; init; }
+    
+    public decimal Price { get; init; }
 }

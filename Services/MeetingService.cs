@@ -41,6 +41,7 @@ public class MeetingService : IMeetingService
             ExternalId = request.ExternalId,
             StartTime = request.StartTime,
             EndTime = request.EndTime,
+            ServiceId = request.ServiceId,
             CreatedAt = DateTime.Now
         };
         
@@ -59,7 +60,7 @@ public class MeetingService : IMeetingService
         
         if (!string.IsNullOrWhiteSpace(request.CreatorEmailAddress))
         {
-            var user = _dataContext.Users.SingleOrDefault(x => x.EmailAddress == request.CreatorEmailAddress);
+            var user = _dataContext.Users.SingleOrDefault(x => x.Id == request.CreatorId);
 
             if (user == null)
             {
@@ -106,7 +107,10 @@ public class MeetingService : IMeetingService
                 Title = m.Title,
                 Description = m.Description,
                 StartTime = m.StartTime,
-                EndTime = m.EndTime
+                EndTime = m.EndTime,
+                ServiceName = m.Service.Name,
+                ServiceDuration = m.Service.Duration,
+                ServicePrice = m.Service.Price
             }).ToList();
 
         return meetings;
