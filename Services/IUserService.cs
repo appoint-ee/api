@@ -4,8 +4,8 @@ namespace api.Services;
 
 public interface IUserService
 {
-    GetUserByUserNameResponse? Get(string userName);
-    Task<long?> GetId(string userName);
-    Task<bool> Exists(long id);
+    GetProfileDetailsResponse? GetProfileDetails(string userName);
+    Task<long?> GetUserId(string profileName);
+    Task<bool> Exists(string profileName, long userId);
     Task<bool> UpdateAvailabilityHours(long id, List<UpdateAvailabilityHoursRequest> availabilityHours);
 }

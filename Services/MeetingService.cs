@@ -60,7 +60,7 @@ public class MeetingService : IMeetingService
         
         if (!string.IsNullOrWhiteSpace(request.CreatorEmailAddress))
         {
-            var user = _dataContext.Users.SingleOrDefault(x => x.Id == request.CreatorId);
+            var user = _dataContext.Users.SingleOrDefault(x => x.EmailAddress == request.CreatorEmailAddress);
 
             if (user == null)
             {
@@ -69,7 +69,6 @@ public class MeetingService : IMeetingService
                     EmailAddress = request.CreatorEmailAddress,
                     FirstName = request.CreatorFirstName,
                     LastName = request.CreatorLastName,
-                    UserName = $"{request.CreatorFirstName} {request.CreatorLastName}", // TODO: uniqueness check
                     Status = "Created",
                     CreatedAt = DateTime.Now
                 };

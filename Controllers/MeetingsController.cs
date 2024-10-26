@@ -9,14 +9,11 @@ namespace api.Controllers;
 public class MeetingsController : ApiControllerBase
 {
     private readonly IMeetingService _meetingService;
-    private readonly IUserService _userService;
 
     public MeetingsController(
-        IMeetingService meetingService,
-        IUserService userService)
+        IMeetingService meetingService)
     {
         _meetingService = meetingService ?? throw new ArgumentNullException(nameof(meetingService));
-        _userService = userService ?? throw new ArgumentNullException(nameof(userService));
     }
 
     [HttpPost]
@@ -28,16 +25,9 @@ public class MeetingsController : ApiControllerBase
     }
     
     [HttpGet]
-    public async Task<ActionResult<List<GetMeetingResponse>?>> Get([FromQuery] string userName, DateTime start, DateTime end)
+    public async Task<ActionResult<List<GetMeetingResponse>?>> Get([FromQuery] long userId, DateTime start, DateTime end)
     {
-        var userId  = await _userService.GetId(userName);
-
-        if (userId is null)
-        {
-            return BadRequest();
-        }
-        
-        var meeting = await _meetingService.Get(userId.Value, start, end);
+        var meeting = await _meetingService.Get(userId, start, end);
 
         if (meeting == null)
         {

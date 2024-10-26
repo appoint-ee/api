@@ -11,6 +11,7 @@ public class DataContext : IdentityDbContext<IdentityUser>
 
     public DbSet<Meeting> Meetings { get; set; }
     public DbSet<MeetingAttendee> MeetingAttendees { get; set; }
+    public DbSet<Profile> Profiles { get; set; }
     public DbSet<User> Users { get; set; }
     public DbSet<Service> Services { get; set; }
     public DbSet<UserService> UserServices { get; set; }
@@ -102,6 +103,61 @@ public class DataContext : IdentityDbContext<IdentityUser>
                 .HasColumnType("timestamp without time zone")
                 .HasDefaultValueSql("CURRENT_TIMESTAMP");
         });
+       
+        modelBuilder.Entity<Profile>(entity =>
+        {
+            entity.ToTable("profiles");
+            
+            entity.HasKey(e => e.Id);
+
+            entity.Property(e => e.Id)
+                .HasColumnName("id")
+                .ValueGeneratedOnAdd();
+
+            entity.Property(e => e.ProfileName)
+                .HasColumnName("profile_name")
+                .IsRequired()
+                .HasMaxLength(50);
+
+            entity.HasIndex(u => u.EmailAddress).IsUnique();
+
+            entity.Property(u => u.EmailAddress)
+                .HasColumnName("email_address")
+                .IsRequired()
+                .HasMaxLength(100);
+
+            entity.Property(u => u.PhotoUrl)
+                .HasColumnName("photo_url");
+
+            entity.Property(e => e.Address)
+                .HasColumnName("address");
+            
+            entity.Property(e => e.CountryCode)
+                .HasColumnName("country_code")
+                .HasMaxLength(2);  
+            
+            entity.Property(e => e.LangCode)
+                .HasColumnName("lang_code")
+                .HasMaxLength(5);  
+            
+            entity.Property(e => e.PreferredTimeZone)
+                .HasColumnName("preferred_time_zone")
+                .HasMaxLength(50);  
+            
+            entity.Property(e => e.IsOrg)
+                .HasColumnName("is_org")
+                .HasMaxLength(50);  
+            
+            entity.Property(e => e.CreatedAt)
+                .HasColumnName("created_at")
+                .HasColumnType("timestamp without time zone")
+                .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+            entity.Property(e => e.UpdatedAt)
+                .HasColumnName("updated_at")
+                .HasColumnType("timestamp without time zone")
+                .HasDefaultValueSql("CURRENT_TIMESTAMP");
+        });
         
         modelBuilder.Entity<User>(entity =>
         {
@@ -112,11 +168,6 @@ public class DataContext : IdentityDbContext<IdentityUser>
             entity.Property(e => e.Id)
                 .HasColumnName("id")
                 .ValueGeneratedOnAdd();
-
-            entity.Property(e => e.UserName)
-                .HasColumnName("user_name")
-                .IsRequired()
-                .HasMaxLength(50);
             
             entity.Property(e => e.FirstName)
                 .HasColumnName("first_name")
@@ -142,21 +193,13 @@ public class DataContext : IdentityDbContext<IdentityUser>
                 .HasColumnName("status")
                 .IsRequired()
                 .HasMaxLength(20);
+            
+            entity.Property(e => e.ProfileId)
+                .HasColumnName("profile_id");
 
-            entity.Property(e => e.Address)
-                .HasColumnName("address");
-            
-            entity.Property(e => e.CountryCode)
-                .HasColumnName("country_code")
-                .HasMaxLength(2);  
-            
-            entity.Property(e => e.LangCode)
-                .HasColumnName("lang_code")
-                .HasMaxLength(5);  
-            
-            entity.Property(e => e.PreferredTimeZone)
-                .HasColumnName("preferred_time_zone")
-                .HasMaxLength(50);  
+            entity.HasOne(u => u.Profile)
+                .WithMany(p => p.Users)
+                .HasForeignKey(u => u.ProfileId);
             
             entity.Property(e => e.CreatedAt)
                 .HasColumnName("created_at")

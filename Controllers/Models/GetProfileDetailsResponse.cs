@@ -1,20 +1,14 @@
 namespace api.Controllers.Models;
 
-public class GetUserByUserNameResponse
+public class GetProfileDetailsResponse
 {
     public long Id { get; init; }
 
     public string UserName { get; init; }
-    
-    public string FirstName { get; init; }
-
-    public string LastName { get; init; }
 
     public string EmailAddress { get; init; }
 
     public string PhotoUrl { get; init; }
-
-    public string Status { get; init; }
 
     public string Address { get; init; }
 
@@ -23,6 +17,8 @@ public class GetUserByUserNameResponse
     public string LangCode { get; init; }
 
     public string PreferredTimeZone { get; init; }
+    
+    public bool IsOrg { get; init; }
     
     public List<ServiceDto> Services { get; init; }
 }
@@ -36,4 +32,17 @@ public class ServiceDto
     public TimeSpan Duration { get; init; }
     
     public decimal Price { get; init; }
+    
+    public List<HostDto> Hosts { get; init; } 
+}
+
+public class HostDto
+{
+    public long Id { get; init; }
+    
+    public string FirstName { get; init; }
+
+    public string LastName { get; init; }
+    
+    public string PhotoUrl { get; init; }
 }

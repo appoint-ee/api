@@ -67,6 +67,8 @@ builder.Services.AddScoped<IMeetingService, MeetingService>();
 builder.Services.AddScoped<ISlotService, SlotService>();
 builder.Services.AddScoped<IUserService, UserService>();
 
+builder.Services.AddRouting(options => options.LowercaseUrls = true);
+
 var app = builder.Build();
 
 app.UseCors("MyCorsPolicy");

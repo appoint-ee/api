@@ -14,46 +14,70 @@ public class UserService : IUserService
         _context = context ?? throw new ArgumentNullException(nameof(context));
     }
     
-    public GetUserByUserNameResponse? Get(string userName)
+    public GetProfileDetailsResponse? GetProfileDetails(string profileName)
     {
-        return _context.Users
-            .Include(u => u.UserServices)
-            .ThenInclude(us => us.Service)
-            .Where(u => u.UserName == userName)
-            .Select(u => new GetUserByUserNameResponse()
+        return _context.Profiles
+               .Where(profile => profile.ProfileName == profileName)
+               .Include(p => p.Users)
+                    .ThenInclude(u => u.UserServices)
+                    .ThenInclude(us => us.Service)
+               .Select(profile => new GetProfileDetailsResponse()
+               {
+                   Id = profile.Id,
+                   UserName = profile.ProfileName,
+                   EmailAddress = profile.EmailAddress,
+                   PhotoUrl = profile.PhotoUrl,
+                   Address = profile.Address,
+                   CountryCode = profile.CountryCode,
+                   LangCode = profile.LangCode,
+                   PreferredTimeZone = profile.PreferredTimeZone,
+                   IsOrg = profile.IsOrg,
+                   Services = GetServices(profile).ToList()
+               }).FirstOrDefault();
+    }
+
+    private static IEnumerable<ServiceDto> GetServices(Profile profile)
+    {
+        return profile.Users
+            .SelectMany(u => u.UserServices.Select(us => new
+            {
+                ServiceId = us.Service.Id,
+                Service = new ServiceDto
+                {
+                    Id = us.Service.Id,
+                    Name = us.Service.Name,
+                    Duration = us.Service.Duration,
+                    Price = us.Service.Price
+                },
+                Host = new HostDto
                 {
                     Id = u.Id,
-                    UserName = u.UserName,
                     FirstName = u.FirstName,
                     LastName = u.LastName,
-                    EmailAddress = u.EmailAddress,
-                    PhotoUrl = u.PhotoUrl,
-                    Status = u.Status,
-                    Address = u.Address,
-                    CountryCode = u.CountryCode,
-                    LangCode = u.LangCode,
-                    PreferredTimeZone = u.PreferredTimeZone,
-                    Services = u.UserServices.Select(us => new ServiceDto()
-                    {
-                        Id = us.Service.Id,
-                        Name = us.Service.Name,
-                        Duration = us.Service.Duration,
-                        Price = us.Service.Price
-                    }).ToList() 
-                })
-            .FirstOrDefault();
+                    PhotoUrl = u.PhotoUrl
+                }
+            }))
+            .GroupBy(x => x.ServiceId)
+            .Select(g => new ServiceDto
+            {
+                Id = g.Key,
+                Name = g.First().Service.Name,
+                Duration = g.First().Service.Duration,
+                Price = g.First().Service.Price,
+                Hosts = g.Select(x => x.Host).DistinctBy(h => h.Id).ToList()
+            });
     }
 
-    public async Task<long?> GetId(string userName)
+    public async Task<long?> GetUserId(string profileName)
     {
-        var user = await _context.Users.SingleOrDefaultAsync(x => x.UserName == userName);
-        return user?.Id;
+        var profile = await _context.Profiles.SingleOrDefaultAsync(x => x.ProfileName == profileName);
+        return profile?.Users.SingleOrDefault()?.Id;
     }
 
-    public async Task<bool> Exists(long id)
+    public async Task<bool> Exists(string profileName, long userId)
     {
-        return await _context.Users
-            .AnyAsync(u => u.Id == id);
+        var profile = await _context.Profiles.Include(x => x.Users).SingleOrDefaultAsync(x => x.ProfileName == profileName);
+        return profile?.Users.Any(u => u.Id == userId) ?? false;
     }
 
     public async Task<bool> UpdateAvailabilityHours(long id, List<UpdateAvailabilityHoursRequest> availabilityHours)

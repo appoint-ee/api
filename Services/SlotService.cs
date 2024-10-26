@@ -13,12 +13,17 @@ public class SlotService : ISlotService
         _context = context ?? throw new ArgumentNullException(nameof(context));
     }
     
-    public List<TimeSlot> GenerateTimeSlots(long userId, DateTime start, DateTime end, IList<GetMeetingResponse>? meetings)
+    public List<TimeSlot>? GenerateTimeSlots(long userId, DateTime start, DateTime end, IList<GetMeetingResponse>? meetings)
     {
         var timeSlots = new List<TimeSlot>();
         var timeIncrement = TimeSpan.FromHours(1);
 
         var userAvailabilityHours = _context.AvailabilityHours.Where(x => x.UserId == userId).ToList();
+
+        if (!userAvailabilityHours.Any())
+        {
+            return null;
+        }
         
         while (start.Date <= end.Date)        
         {
@@ -34,7 +39,7 @@ public class SlotService : ISlotService
                     var nextIteration = currentIteration.Add(timeIncrement);
                     
                     var isBooked = meetings != null && meetings.Any(m =>
-                        m.StartTime < currentIteration && currentIteration < m.EndTime       
+                        m.StartTime <= currentIteration && currentIteration <= m.EndTime       
                         || currentIteration < m.StartTime &&  m.EndTime < nextIteration       
                         || currentIteration == m.StartTime &&  m.EndTime == nextIteration       
                         || m.StartTime < nextIteration && nextIteration < m.EndTime);        
@@ -57,12 +62,17 @@ public class SlotService : ISlotService
         return timeSlots;
     }
 
-    public List<DaySlot> GenerateDaySlots(long userId, DateTime start, DateTime end, IList<GetMeetingResponse>? meetings)
+    public List<DaySlot>? GenerateDaySlots(long userId, DateTime start, DateTime end, IList<GetMeetingResponse>? meetings)
     { 
         var daySlots = new List<DaySlot>();
         
         var timeSlots = GenerateTimeSlots(userId, start, end, meetings);
 
+        if (timeSlots == null)
+        {
+            return null;
+        }
+        
         var currentDate = start.Date;
 
         while (currentDate < end.Date)
