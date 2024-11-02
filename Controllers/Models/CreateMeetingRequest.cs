@@ -18,7 +18,7 @@ public class CreateMeetingRequest
     
     public long? CreatorId { get; init; }
     
-    public long? ParticipantId { get; init; }
+    public long? HostId { get; init; }
     
     public string? ExternalId { get; init; }
 

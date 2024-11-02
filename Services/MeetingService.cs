@@ -27,11 +27,11 @@ public class MeetingService : IMeetingService
 
     public void Create(CreateMeetingRequest request)
     {
-        var anyParticipant = _dataContext.Users.Any(u => u.Id == request.ParticipantId);
+        var hostExist = _dataContext.Users.Any(u => u.Id == request.HostId);
 
-        if (!anyParticipant)
+        if (!hostExist)
         {
-            throw new Exception("Participant not found!");
+            throw new Exception("Host not found!");
         }
 
         var meeting = new Meeting()
@@ -51,7 +51,7 @@ public class MeetingService : IMeetingService
         {
             new()
             {
-                UserId = request.ParticipantId,
+                UserId = request.HostId,
                 IsCreator = true,
                 CreatedAt = DateTime.Now,
                 Meeting = meeting
