@@ -15,7 +15,7 @@ jobs:
     steps:
     - uses: actions/checkout@v3
     - name: Build the Docker image
-      run: docker buildx build --platform linux/amd64 . --file Dockerfile --tag api .
+      run: docker buildx build --platform linux/amd64 . --file Dockerfile --tag api
     - name: Log in to DigitalOcean Container Registry
       run: echo "${{ secrets.DIGITALOCEAN_REGISTRY_TOKEN }}" | docker login -u ${{ secrets.DIGITALOCEAN_REGISTRY_USERNAME }} --password-stdin registry.digitalocean.com
     - name: Tag Docker image to DigitalOcean Container Registry
