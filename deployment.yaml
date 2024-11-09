@@ -17,8 +17,6 @@ spec:
       containers:
       - name: appointee-api
         image: registry.digitalocean.com/docr-appointee-dams/api:latest
-        imagePullSecrets:
-        - name: do-registry
         env:
         - name: GoogleAPI__Key
           value: "AIzaSyCkSKM3cIARzBXU_VYFCAx0dbNIABniQoI"
