@@ -15,11 +15,11 @@ jobs:
     steps:
     - uses: actions/checkout@v3
     - name: Build the Docker image
-      run: docker buildx build --platform linux/amd64 . --file Dockerfile --tag api:$(date +%s)
+      run: docker buildx build --platform linux/amd64 . --file Dockerfile --tag api .
     - name: Log in to DigitalOcean Container Registry
       run: echo "${{ secrets.DIGITALOCEAN_REGISTRY_TOKEN }}" | docker login -u ${{ secrets.DIGITALOCEAN_REGISTRY_USERNAME }} --password-stdin registry.digitalocean.com
-    - name: Pull Docker image to DigitalOcean Container Registry
-      run: docker pull registry.digitalocean.com/docr-appointee/api
+    - name: Tag Docker image to DigitalOcean Container Registry
+      run: docker tag api registry.digitalocean.com/docr-appointee-dams/api
     - name: Push Docker image to DigitalOcean Container Registry
       run: docker push registry.digitalocean.com/docr-appointee-dams/api
 
