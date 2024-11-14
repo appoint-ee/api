@@ -18,21 +18,21 @@ public class SlotService : ISlotService
         var timeSlots = new List<TimeSlot>();
         var timeIncrement = TimeSpan.FromHours(1);
 
-        var userAvailabilityHours = _context.AvailabilityHours.Where(x => x.UserId == userId).ToList();
+        var userWeeklyHours = _context.WeeklyHours.Where(x => x.UserId == userId).ToList();
 
-        if (!userAvailabilityHours.Any())
+        if (!userWeeklyHours.Any())
         {
             return null;
         }
         
         while (start.Date <= end.Date)        
         {
-            var dailyAvailabilityHours = userAvailabilityHours.Where(x => x.DayOfWeek == (int)start.DayOfWeek).ToList();
+            var weeklyHoursForDayOfWeek = userWeeklyHours.Where(x => x.DayOfWeek == (int)start.DayOfWeek).ToList();
 
-            foreach (var dailyAvailabilityHour in dailyAvailabilityHours)
+            foreach (var weeklyHourItem in weeklyHoursForDayOfWeek)
             {
-                var currentIteration = new DateTime(start.Year, start.Month, start.Day, dailyAvailabilityHour.StartTime.Hour, 0, 0);
-                var endIteration = new DateTime(start.Year, start.Month, start.Day, dailyAvailabilityHour.EndTime.Hour, 0, 0);
+                var currentIteration = new DateTime(start.Year, start.Month, start.Day, weeklyHourItem.StartTime.Hour, 0, 0);
+                var endIteration = new DateTime(start.Year, start.Month, start.Day, weeklyHourItem.EndTime.Hour, 0, 0);
                 
                 for (; currentIteration < endIteration; currentIteration = currentIteration.Add(timeIncrement))
                 {

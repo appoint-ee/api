@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace api.Data.Entities;
 
-public class AvailabilityHour
+public class WeeklyHour
 {
     [Key]
     public Guid Id { get; set; }
