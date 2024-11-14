@@ -5,7 +5,7 @@ Authorization: Bearer {{access_token}}
 
 ### UPDATE
 
-PUT http://localhost:5074/Users/3/availability-hours
+PUT http://localhost:5074/Users/3/weekly-hours
 Authorization: Bearer {{access_token}}
 Accept: */*
 Content-Type: application/json

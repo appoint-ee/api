@@ -80,29 +80,29 @@ public class UserService : IUserService
         return profile?.Users.Any(u => u.Id == userId) ?? false;
     }
 
-    public async Task<bool> UpdateAvailabilityHours(long id, List<UpdateAvailabilityHoursRequest> availabilityHours)
+    public async Task<bool> UpdateWeeklyHours(long id, List<UpdateWeeklyHoursRequest> weeklyHours)
     {
         await using var transaction = await _context.Database.BeginTransactionAsync();
 
         try
         {
-            var existingAvailability = _context.AvailabilityHours
+            var existingWeeklyHours = _context.WeeklyHours
                 .Where(a => a.UserId == id);
             
-            _context.AvailabilityHours.RemoveRange(existingAvailability);
+            _context.WeeklyHours.RemoveRange(existingWeeklyHours);
 
-            foreach (var availability in availabilityHours)
+            foreach (var weeklyHour in weeklyHours)
             {
-                var newAvailability = new AvailabilityHour()
-                {
-                    UserId = id,
-                    DayOfWeek = availability.DayOfWeek,
-                    StartTime = availability.StartTime,
-                    EndTime = availability.EndTime,
-                    CreatedAt = DateTime.Now,
-                };
-
-                _context.AvailabilityHours.Add(newAvailability);
+                _context.WeeklyHours.Add
+                (
+                    new WeeklyHour()
+                    {
+                        UserId = id,
+                        DayOfWeek = weeklyHour.DayOfWeek,
+                        StartTime = weeklyHour.StartTime,
+                        EndTime = weeklyHour.EndTime,
+                        CreatedAt = DateTime.Now,
+                    });
             }
 
             await _context.SaveChangesAsync();

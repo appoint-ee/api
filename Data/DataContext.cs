@@ -16,7 +16,7 @@ public class DataContext : IdentityDbContext<IdentityUser>
     public DbSet<Service> Services { get; set; }
     public DbSet<UserService> UserServices { get; set; }
     public DbSet<GoogleAuth> GoogleAuths { get; set; }
-    public DbSet<AvailabilityHour> AvailabilityHours { get; set; }
+    public DbSet<WeeklyHour> WeeklyHours { get; set; }
     
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -317,9 +317,9 @@ public class DataContext : IdentityDbContext<IdentityUser>
                 .IsRequired();
         });
         
-        modelBuilder.Entity<AvailabilityHour>(entity =>
+        modelBuilder.Entity<WeeklyHour>(entity =>
         {
-            entity.ToTable("availability_hours");
+            entity.ToTable("weekly_hours");
 
             entity.HasKey(e => e.Id);
 

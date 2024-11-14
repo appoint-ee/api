@@ -29,8 +29,8 @@ public class ProfilesController : ApiControllerBase
         return profileDetails;
     }
 
-    [HttpPut("{profileName}/users/{userId}/availability-hours")]
-    public async Task<ActionResult> UpdateAvailabilityHours([FromRoute] string profileName, long userId, [FromBody] List<UpdateAvailabilityHoursRequest> request)
+    [HttpPut("{profileName}/users/{userId}/weekly-hours")]
+    public async Task<ActionResult> UpdateWeeklyHours([FromRoute] string profileName, long userId, [FromBody] List<UpdateWeeklyHoursRequest> request)
     {
         var exist = await _userService.Exists(profileName, userId);
 
@@ -39,7 +39,7 @@ public class ProfilesController : ApiControllerBase
             return NotFound();
         }
 
-        var isSuccess = await _userService.UpdateAvailabilityHours(userId, request);
+        var isSuccess = await _userService.UpdateWeeklyHours(userId, request);
 
         return isSuccess ? Ok() : StatusCode(500);
     }
