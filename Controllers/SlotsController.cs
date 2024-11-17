@@ -24,7 +24,7 @@ public class SlotsController : ApiControllerBase
     {
         var meetings = await _meetingService.Get(userId, start, end);
 
-        var timeSlots = _slotService.GenerateTimeSlots(userId, start, end, meetings);
+        var timeSlots = _slotService.GenerateTimeSlots(userId, start, end, meetings?.ToArray());
 
         return Ok(timeSlots);
     }
@@ -34,7 +34,7 @@ public class SlotsController : ApiControllerBase
     {
         var meetings = await _meetingService.Get(userId, start, end);
 
-        var daySlots = _slotService.GenerateDaySlots(userId, start, end, meetings);
+        var daySlots = _slotService.GenerateDaySlots(userId, start, end, meetings?.ToArray());
 
         return Ok(daySlots);
     }
