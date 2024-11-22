@@ -13,11 +13,11 @@ public class Service
     public string Name { get; set; }
 
     [Required]
-    public TimeSpan Duration { get; set; }
+    public TimeSpan DefaultDuration { get; set; }
 
     [Required]
     [Range(0, 9999.99)]
-    public decimal Price { get; set; }
+    public decimal DefaultPrice { get; set; }
 
     [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
     public DateTime CreatedAt { get; set; }

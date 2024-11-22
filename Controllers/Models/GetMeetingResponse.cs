@@ -12,9 +12,9 @@ public class GetMeetingResponse
     
     public string ServiceName { get; init; }
 
-    public TimeSpan ServiceDuration { get; init; }
+    public TimeSpan Duration { get; init; }
     
-    public decimal ServicePrice { get; init; }
+    public decimal Price { get; init; }
 
     public DateTime StartTime { get; init; }
 

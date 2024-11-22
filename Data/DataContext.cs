@@ -57,6 +57,14 @@ public class DataContext : IdentityDbContext<IdentityUser>
             
             entity.Property(e => e.ServiceId)
                 .HasColumnName("service_id");
+            
+            entity.Property(e => e.Duration)
+                .HasColumnName("duration")
+                .IsRequired();
+            
+            entity.Property(e => e.Price)
+                .HasColumnName("price")
+                .IsRequired();
 
             entity.Property(e => e.CreatedAt)
                 .HasColumnName("created_at")
@@ -228,12 +236,12 @@ public class DataContext : IdentityDbContext<IdentityUser>
                 .IsRequired()
                 .HasMaxLength(50);
             
-            entity.Property(e => e.Duration)
-                .HasColumnName("duration")
+            entity.Property(e => e.DefaultDuration)
+                .HasColumnName("default_duration")
                 .IsRequired();
             
-            entity.Property(e => e.Price)
-                .HasColumnName("price")
+            entity.Property(e => e.DefaultPrice)
+                .HasColumnName("default_price")
                 .IsRequired();
 
             entity.Property(e => e.CreatedAt)
@@ -266,6 +274,14 @@ public class DataContext : IdentityDbContext<IdentityUser>
             entity.HasOne(us => us.Service)
                 .WithMany(s => s.UserServices)
                 .HasForeignKey(us => us.ServiceId);
+            
+            entity.Property(e => e.Duration)
+                .HasColumnName("duration")
+                .IsRequired();
+            
+            entity.Property(e => e.Price)
+                .HasColumnName("price")
+                .IsRequired();
 
             entity.Property(us => us.CreatedAt)
                 .HasColumnName("created_at")

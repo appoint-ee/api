@@ -46,15 +46,17 @@ public class UserService : IUserService
                 {
                     Id = us.Service.Id,
                     Name = us.Service.Name,
-                    Duration = us.Service.Duration,
-                    Price = us.Service.Price
+                    DefaultDuration = us.Service.DefaultDuration,
+                    DefaultPrice = us.Service.DefaultPrice
                 },
                 Host = new HostDto
                 {
                     Id = u.Id,
                     FirstName = u.FirstName,
                     LastName = u.LastName,
-                    PhotoUrl = u.PhotoUrl
+                    PhotoUrl = u.PhotoUrl,
+                    Duration = us.Duration,
+                    Price = us.Price
                 }
             }))
             .GroupBy(x => x.ServiceId)
@@ -62,9 +64,11 @@ public class UserService : IUserService
             {
                 Id = g.Key,
                 Name = g.First().Service.Name,
-                Duration = g.First().Service.Duration,
-                Price = g.First().Service.Price,
-                Hosts = g.Select(x => x.Host).DistinctBy(h => h.Id).ToList()
+                DefaultDuration = g.First().Service.DefaultDuration,
+                DefaultPrice = g.First().Service.DefaultPrice,
+                Hosts = g.Select(x => x.Host)
+                    .DistinctBy(h => h.Id)
+                    .ToList()
             });
     }
 

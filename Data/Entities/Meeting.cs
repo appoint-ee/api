@@ -27,6 +27,13 @@ public class Meeting // TODO: consider renaming as appointment
     [ForeignKey("ServiceId")]
     public Service Service { get; set; }
     
+    [Required]
+    public TimeSpan Duration { get; set; }
+
+    [Required]
+    [Range(0, 9999.99)]
+    public decimal Price { get; set; }
+    
     [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
     public DateTime CreatedAt { get; set; }
     

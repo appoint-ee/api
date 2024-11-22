@@ -29,9 +29,9 @@ public class ServiceDto
     
     public string? Name { get; init; }
     
-    public TimeSpan Duration { get; init; }
+    public TimeSpan DefaultDuration { get; init; }
     
-    public decimal Price { get; init; }
+    public decimal DefaultPrice { get; init; }
     
     public List<HostDto> Hosts { get; init; } 
 }
@@ -45,4 +45,8 @@ public class HostDto
     public string LastName { get; init; }
     
     public string PhotoUrl { get; init; }
+    
+    public TimeSpan Duration { get; init; }
+    
+    public decimal Price { get; init; }
 }

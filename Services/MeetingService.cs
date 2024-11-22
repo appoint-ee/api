@@ -33,15 +33,23 @@ public class MeetingService : IMeetingService
         {
             throw new Exception("Host not found!");
         }
+        
+        var service = _dataContext.Services.SingleOrDefault(u => u.Id == request.ServiceId);
+
+        if (service == null)
+        {
+            throw new Exception("Service not found!");
+        }
 
         var meeting = new Meeting()
         {
-            Title = request.Title,
+            Title = service.Name,
             Description = request.Description,
-            ExternalId = request.ExternalId,
             StartTime = request.StartTime,
             EndTime = request.EndTime,
             ServiceId = request.ServiceId,
+            Duration = request.EndTime - request.StartTime,
+            Price = request.Price ?? service.DefaultPrice,
             CreatedAt = DateTime.Now
         };
         
@@ -108,8 +116,8 @@ public class MeetingService : IMeetingService
                 StartTime = m.StartTime,
                 EndTime = m.EndTime,
                 ServiceName = m.Service.Name,
-                ServiceDuration = m.Service.Duration,
-                ServicePrice = m.Service.Price
+                Duration = m.Duration,
+                Price = m.Price
             }).ToList();
 
         return meetings;
