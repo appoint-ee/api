@@ -23,6 +23,135 @@ public class DataContext : IdentityDbContext<IdentityUser>
     {
         base.OnModelCreating(modelBuilder);
 
+        modelBuilder.Entity<IdentityUser>(entity =>
+        {
+            entity.ToTable("user_credentials");
+            
+            entity.HasKey(e => e.Id);
+
+            entity.Property(e => e.Id).HasColumnName("id");
+            entity.Property(e => e.UserName).HasColumnName("userName");
+            entity.Property(e => e.NormalizedUserName).HasColumnName("normalizedUserName");
+            entity.Property(e => e.Email).HasColumnName("email");
+            entity.Property(e => e.NormalizedEmail).HasColumnName("normalizedEmail");
+            entity.Property(e => e.EmailConfirmed).HasColumnName("emailConfirmed");
+            entity.Property(e => e.PasswordHash).HasColumnName("passwordHash");
+            entity.Property(e => e.SecurityStamp).HasColumnName("securityStamp");
+            entity.Property(e => e.ConcurrencyStamp).HasColumnName("concurrencyStamp");
+            entity.Property(e => e.PhoneNumber).HasColumnName("phoneNumber");
+            entity.Property(e => e.PhoneNumberConfirmed).HasColumnName("phoneNumberConfirmed");
+            entity.Property(e => e.TwoFactorEnabled).HasColumnName("twoFactorEnabled");
+            entity.Property(e => e.LockoutEnd).HasColumnName("lockoutEnd");
+            entity.Property(e => e.LockoutEnabled).HasColumnName("lockoutEnabled");
+            entity.Property(e => e.AccessFailedCount).HasColumnName("accessFailedCount");
+        });
+
+        modelBuilder.Entity<IdentityUserClaim<string>>(entity =>
+        {
+            entity.ToTable("user_claims");
+            
+            entity.HasKey(e => e.Id).HasName("PK_user_claims");
+
+            entity.Property(e => e.Id).HasColumnName("id");
+            entity.Property(e => e.UserId).HasColumnName("userId");
+            entity.Property(e => e.ClaimType).HasColumnName("claimType");
+            entity.Property(e => e.ClaimValue).HasColumnName("claimValue");
+
+            entity.HasOne<IdentityUser>()
+                .WithMany()
+                .HasForeignKey(e => e.UserId)
+                .HasConstraintName("FK_user_claims_user_credentials_UserId")
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<IdentityUserLogin<string>>(entity =>
+        {
+            entity.ToTable("user_logins");
+            
+            entity.HasKey(e => new { e.LoginProvider, e.ProviderKey }).HasName("PK_user_logins");
+
+            entity.Property(e => e.LoginProvider).HasColumnName("loginProvider");
+            entity.Property(e => e.ProviderKey).HasColumnName("providerKey");
+            entity.Property(e => e.ProviderDisplayName).HasColumnName("providerDisplayName");
+            entity.Property(e => e.UserId).HasColumnName("userId");
+
+            entity.HasOne<IdentityUser>()
+                .WithMany()
+                .HasForeignKey(e => e.UserId)
+                .HasConstraintName("FK_user_logins_user_credentials_UserId")
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<IdentityUserToken<string>>(entity =>
+        {
+            entity.ToTable("user_tokens");
+            
+            entity.HasKey(e => new { e.UserId, e.LoginProvider, e.Name }).HasName("PK_user_tokens");
+
+            entity.Property(e => e.UserId).HasColumnName("userId");
+            entity.Property(e => e.LoginProvider).HasColumnName("loginProvider");
+            entity.Property(e => e.Name).HasColumnName("name");
+            entity.Property(e => e.Value).HasColumnName("value");
+
+            entity.HasOne<IdentityUser>()
+                .WithMany()
+                .HasForeignKey(e => e.UserId)
+                .HasConstraintName("FK_user_tokens_user_credentials_UserId")
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<IdentityRole>(entity =>
+        {
+            entity.ToTable("roles");
+            
+            entity.HasKey(e => e.Id).HasName("PK_roles");
+
+            entity.Property(e => e.Id).HasColumnName("id");
+            entity.Property(e => e.Name).HasColumnName("name");
+            entity.Property(e => e.NormalizedName).HasColumnName("normalizedName");
+            entity.Property(e => e.ConcurrencyStamp).HasColumnName("concurrencyStamp");
+        });
+
+        modelBuilder.Entity<IdentityRoleClaim<string>>(entity =>
+        {
+            entity.ToTable("role_claims");
+            
+            entity.HasKey(e => e.Id).HasName("PK_role_claims");
+
+            entity.Property(e => e.Id).HasColumnName("id");
+            entity.Property(e => e.RoleId).HasColumnName("roleId");
+            entity.Property(e => e.ClaimType).HasColumnName("claimType");
+            entity.Property(e => e.ClaimValue).HasColumnName("claimValue");
+
+            entity.HasOne<IdentityRole>()
+                .WithMany()
+                .HasForeignKey(e => e.RoleId)
+                .HasConstraintName("FK_role_claims_roles_RoleId")
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<IdentityUserRole<string>>(entity =>
+        {
+            entity.ToTable("user_roles");
+            
+            entity.HasKey(e => new { e.UserId, e.RoleId }).HasName("PK_user_roles");
+
+            entity.Property(e => e.UserId).HasColumnName("userId");
+            entity.Property(e => e.RoleId).HasColumnName("roleId");
+
+            entity.HasOne<IdentityUser>()
+                .WithMany()
+                .HasForeignKey(e => e.UserId)
+                .HasConstraintName("FK_user_roles_user_credentials_UserId")
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne<IdentityRole>()
+                .WithMany()
+                .HasForeignKey(e => e.RoleId)
+                .HasConstraintName("FK_user_roles_roles_RoleId")
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+        
         modelBuilder.Entity<Meeting>(entity =>
         {
             entity.ToTable("meetings");
