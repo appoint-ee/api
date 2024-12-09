@@ -121,4 +121,67 @@ public class UserService : IUserService
             return false;
         }
     }
+
+    public async Task<bool> UpsertDateSpecificHour(long id, UpsertDateSpecificHourRequest newDateSpecificHour)
+    {
+        var existingDateSpecificHours = _context.DateSpecificHours
+            .Where(x => x.UserId == id );
+
+        var rangeStart = newDateSpecificHour.StartTime;
+        var rangeEnd = newDateSpecificHour.EndTime;
+
+        var anyOverlapping = await existingDateSpecificHours.AnyAsync(x => x.Id != newDateSpecificHour.Id 
+                                                     && x.SpecificDate == newDateSpecificHour.SpecificDate
+                                                     && (rangeStart <= x.StartTime && x.StartTime <= rangeEnd
+                                                        || rangeStart <= x.EndTime && x.EndTime <= rangeEnd
+                                                        || x.StartTime <= rangeStart && rangeEnd <= x.EndTime));
+
+        if (anyOverlapping)
+        {
+            return false;
+        }
+
+        var dateSpecificHour = existingDateSpecificHours.FirstOrDefault(x => x.Id == newDateSpecificHour.Id);
+
+        if (dateSpecificHour == null)
+        {
+            dateSpecificHour = new DateSpecificHour
+            {
+                UserId = id,
+                SpecificDate = newDateSpecificHour.SpecificDate,
+                StartTime = newDateSpecificHour.StartTime,
+                EndTime = newDateSpecificHour.EndTime
+            };
+                
+            _context.DateSpecificHours.Add(dateSpecificHour);
+        }
+        else
+        {
+            dateSpecificHour.SpecificDate = newDateSpecificHour.SpecificDate;
+            dateSpecificHour.StartTime = newDateSpecificHour.StartTime;
+            dateSpecificHour.EndTime = newDateSpecificHour.EndTime;
+        }
+
+        await _context.SaveChangesAsync();
+        
+        return true;
+    }
+    
+    public async Task<bool> DeleteDateSpecificHour(long id, Guid dateSpecificHourId)
+    {
+        var dateSpecificHour = await _context.DateSpecificHours
+            .SingleOrDefaultAsync(x => x.UserId == id 
+                && x.Id == dateSpecificHourId);
+
+        if (dateSpecificHour == null)
+        {
+            return false;
+        }
+        
+        _context.Remove(dateSpecificHour);
+        await _context.SaveChangesAsync();   
+            
+        return true;
+
+    }
 }

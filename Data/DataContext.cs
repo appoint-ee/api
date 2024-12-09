@@ -527,6 +527,11 @@ public class DataContext : IdentityDbContext<IdentityUser>
                 .HasColumnName("created_at")
                 .HasColumnType("timestamp without time zone")
                 .HasDefaultValueSql("CURRENT_TIMESTAMP");
+            
+            entity.Property(e => e.UpdatedAt)
+                .HasColumnName("updated_at")
+                .HasColumnType("timestamp without time zone")
+                .HasDefaultValueSql("CURRENT_TIMESTAMP");
         });
     }
 }
