@@ -13,7 +13,24 @@ public class UserService : IUserService
     {
         _context = context ?? throw new ArgumentNullException(nameof(context));
     }
-    
+
+    public async Task Create(CreateUserRequest request)
+    {
+        _context.Users.Add(
+            new User
+            {
+                FirstName = request.FirstName,
+                LastName = request.LastName,
+                EmailAddress = request.Email,
+                PhotoUrl = request.PhotoUrl,
+                Status = "Created",
+                CreatedAt = default,
+                UpdatedAt = default
+            });
+        
+        await _context.SaveChangesAsync();
+    }
+
     public GetProfileDetailsResponse? GetProfileDetails(string profileName)
     {
         return _context.Profiles
