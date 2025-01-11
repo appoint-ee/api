@@ -1,6 +1,9 @@
+using System.Text.Json;
 using api.Controllers.Models;
 using api.Services;
+using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.AspNetCore.Mvc;
+using Newtonsoft.Json;
 
 namespace api.Controllers;
 
@@ -9,17 +12,28 @@ namespace api.Controllers;
 public class ProfilesController : ApiControllerBase
 {
     private readonly IUserService _userService;
+    private readonly IProfileService _profileService;
     
     public ProfilesController(
-        IUserService userService)
+        IUserService userService,
+        IProfileService profileService)
     {
         _userService = userService ?? throw new ArgumentNullException(nameof(userService));
+        _profileService = profileService ?? throw new ArgumentNullException(nameof(profileService));
+    }
+    
+    [HttpPost]
+    public ActionResult Create([FromBody] CreateProfileRequest request)
+    {
+        _profileService.Create(request);
+
+        return Ok();
     }
 
     [HttpGet("{profileName}")]
     public ActionResult<GetProfileDetailsResponse>? GetDetail([FromRoute] string profileName)
     {
-        var profileDetails = _userService.GetProfileDetails(profileName);
+        var profileDetails = _profileService.GetProfileDetails(profileName);
 
         if (profileDetails == null)
         {
@@ -28,7 +42,29 @@ public class ProfilesController : ApiControllerBase
 
         return profileDetails;
     }
+    
+    [HttpPatch("{id}")]
+    public async Task<IActionResult> Patch(
+        long id, 
+        [FromBody] JsonElement jsonElement)
+    {
+        // https://github.com/dotnet/aspnetcore/issues/24333
+        var patch = JsonConvert.DeserializeObject<JsonPatchDocument>(jsonElement.GetRawText());
 
+        if (patch == null)
+        {
+            return BadRequest();
+        }
+        
+        var success = await _profileService.Patch(id, patch);
+        if (!success) 
+        { 
+            return NotFound();
+        }
+        
+        return NoContent(); 
+    }
+    
     [HttpPut("{profileName}/users/{userId}/weekly-hours")]
     public async Task<ActionResult> UpdateWeeklyHours([FromRoute] string profileName, long userId, [FromBody] List<UpdateWeeklyHoursRequest> request)
     {

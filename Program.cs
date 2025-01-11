@@ -64,6 +64,7 @@ builder.Services.AddTransient<IRestClient, RestClient>();
 builder.Services.AddScoped<IGoogleAuthService, GoogleAuthService>();
 builder.Services.AddScoped<IGoogleEventService, GoogleEventService>();
 builder.Services.AddScoped<IMeetingService, MeetingService>();
+builder.Services.AddScoped<IProfileService, ProfileService>();
 builder.Services.AddScoped<ISlotService, SlotService>();
 builder.Services.AddScoped<IUserService, UserService>();
 
