@@ -44,9 +44,7 @@ public class ProfilesController : ApiControllerBase
     }
     
     [HttpPatch("{id}")]
-    public async Task<IActionResult> Patch(
-        long id, 
-        [FromBody] JsonElement jsonElement)
+    public async Task<IActionResult> Patch(long id, [FromBody] JsonElement jsonElement)
     {
         // https://github.com/dotnet/aspnetcore/issues/24333
         var patch = JsonConvert.DeserializeObject<JsonPatchDocument>(jsonElement.GetRawText());
@@ -65,6 +63,21 @@ public class ProfilesController : ApiControllerBase
         return NoContent(); 
     }
     
+    [HttpGet("{profileName}/users/{userId}/weekly-hours")]
+    public async Task<ActionResult> GetWeeklyHours([FromRoute] string profileName, long userId)
+    {
+        var exist = await _userService.Exists(profileName, userId);
+
+        if (!exist)
+        {
+            return NotFound();
+        }
+
+        var weeklyHours = await _userService.GetWeeklyHours(userId);
+
+        return Ok(weeklyHours);
+    }
+    
     [HttpPut("{profileName}/users/{userId}/weekly-hours")]
     public async Task<ActionResult> UpdateWeeklyHours([FromRoute] string profileName, long userId, [FromBody] List<UpdateWeeklyHoursRequest> request)
     {
@@ -78,6 +91,21 @@ public class ProfilesController : ApiControllerBase
         var isSuccess = await _userService.UpdateWeeklyHours(userId, request);
 
         return isSuccess ? Ok() : StatusCode(500);
+    }
+    
+    [HttpGet("{profileName}/users/{userId}/date-specific-hours")]
+    public async Task<ActionResult> GetDateSpecificHours([FromRoute] string profileName, long userId)
+    {
+        var exist = await _userService.Exists(profileName, userId);
+
+        if (!exist)
+        {
+            return NotFound();
+        }
+
+        var dateSpecificHours = await _userService.GetDateSpecificHours(userId);
+
+        return Ok(dateSpecificHours);
     }
     
     [HttpPost("{profileName}/users/{userId}/date-specific-hour")]

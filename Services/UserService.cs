@@ -44,6 +44,21 @@ public class UserService : IUserService
         return profile?.Users.Any(u => u.Id == userId) ?? false;
     }
 
+    public async Task<List<GetWeeklyHoursResponse>> GetWeeklyHours(long id)
+    {
+        return await _context.WeeklyHours
+            .Where(a => a.UserId == id)
+            .Select(a => new GetWeeklyHoursResponse
+            {
+                Id = a.Id,
+                UserId = a.UserId,
+                DayOfWeek = a.DayOfWeek,
+                StartTime = a.StartTime,
+                EndTime = a.EndTime
+            })
+            .ToListAsync();
+    }
+
     public async Task<bool> UpdateWeeklyHours(long id, List<UpdateWeeklyHoursRequest> weeklyHours)
     {
         await using var transaction = await _context.Database.BeginTransactionAsync();
@@ -82,24 +97,37 @@ public class UserService : IUserService
         }
     }
 
+    public async Task<List<GetDateSpecificHoursResponse>> GetDateSpecificHours(long id)
+    {
+        return await _context.DateSpecificHours
+            .Where(a => a.UserId == id)
+            .Select(a => new GetDateSpecificHoursResponse()
+            {
+                Id = a.Id,
+                UserId = a.UserId,
+                SpecificDate = a.SpecificDate,
+                StartTime = a.StartTime,
+                EndTime = a.EndTime
+            })
+            .ToListAsync();    }
+
     public async Task<bool> UpsertDateSpecificHour(long id, UpsertDateSpecificHourRequest newDateSpecificHour)
     {
         var existingDateSpecificHours = _context.DateSpecificHours
             .Where(x => x.UserId == id );
 
-        var rangeStart = newDateSpecificHour.StartTime;
-        var rangeEnd = newDateSpecificHour.EndTime;
-
-        var anyOverlapping = await existingDateSpecificHours.AnyAsync(x => x.Id != newDateSpecificHour.Id 
-                                                     && x.SpecificDate == newDateSpecificHour.SpecificDate
-                                                     && (rangeStart <= x.StartTime && x.StartTime <= rangeEnd
-                                                        || rangeStart <= x.EndTime && x.EndTime <= rangeEnd
-                                                        || x.StartTime <= rangeStart && rangeEnd <= x.EndTime));
-
-        if (anyOverlapping)
-        {
-            return false;
-        }
+        // TODO:
+        // var rangeStart = newDateSpecificHour.StartTime;
+        // var rangeEnd = newDateSpecificHour.EndTime;
+        // var anyOverlapping = await existingDateSpecificHours.AnyAsync(x => x.Id != newDateSpecificHour.Id 
+        //                                                                    && x.SpecificDate == newDateSpecificHour.SpecificDate
+        //                                                                    && (rangeStart <= x.StartTime && x.StartTime <= rangeEnd
+        //                                                                        || rangeStart <= x.EndTime && x.EndTime <= rangeEnd
+        //                                                                        || x.StartTime <= rangeStart && rangeEnd <= x.EndTime));
+        // if (anyOverlapping)
+        // {
+        //     return false;
+        // }
 
         var dateSpecificHour = existingDateSpecificHours.FirstOrDefault(x => x.Id == newDateSpecificHour.Id);
 
