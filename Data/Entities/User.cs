@@ -19,6 +19,16 @@ public class User
     public string EmailAddress { get; set; }
 
     public string? PhotoUrl { get; set; }
+    
+    [Required, StringLength(50)]
+    public string City { get; set; }
+    
+    [Required, StringLength(50)]
+    public string Country { get; set; }
+    
+    [Required, StringLength(50)]
+    [RegularExpression(@"^\+?[1-9]\d{1,14}$", ErrorMessage = "Invalid phone number format.")]
+    public string PhoneNumber { get; set; }
 
     [StringLength(20)]
     public string Status { get; set; }

@@ -332,6 +332,21 @@ public class DataContext : IdentityDbContext<IdentityUser>
                 .IsRequired()
                 .HasMaxLength(20);
             
+            entity.Property(e => e.City)
+                .HasColumnName("city")
+                .IsRequired()
+                .HasMaxLength(50);
+            
+            entity.Property(e => e.Country)
+                .HasColumnName("country")
+                .IsRequired()
+                .HasMaxLength(50);
+            
+            entity.Property(e => e.PhoneNumber)
+                .HasColumnName("phone_number")
+                .IsRequired()
+                .HasMaxLength(50);
+            
             entity.Property(e => e.ProfileId)
                 .HasColumnName("profile_id");
 

@@ -16,6 +16,14 @@ public class UserService : IUserService
 
     public async Task Create(CreateUserRequest request)
     {
+        var exist = await _context.Users.AnyAsync(x =>
+            x.EmailAddress == request.Email);
+
+        if (exist)
+        {
+            return;
+        }
+        
         _context.Users.Add(
             new User
             {
@@ -24,6 +32,9 @@ public class UserService : IUserService
                 EmailAddress = request.Email,
                 PhotoUrl = request.PhotoUrl,
                 Status = "Created",
+                City = request.City,
+                Country = request.Country,
+                PhoneNumber = request.PhoneNumber,
                 CreatedAt = default,
                 UpdatedAt = default
             });

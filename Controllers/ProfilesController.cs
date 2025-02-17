@@ -108,7 +108,7 @@ public class ProfilesController : ApiControllerBase
         return Ok(dateSpecificHours);
     }
     
-    [HttpPost("{profileName}/users/{userId}/date-specific-hour")]
+    [HttpPut("{profileName}/users/{userId}/date-specific-hour")]
     public async Task<ActionResult> UpsertDateSpecificHour([FromRoute] string profileName, long userId, [FromBody] UpsertDateSpecificHourRequest request)
     {
         var exist = await _userService.Exists(profileName, userId);
