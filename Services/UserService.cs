@@ -42,10 +42,10 @@ public class UserService : IUserService
         await _context.SaveChangesAsync();
     }
 
-    public async Task<long?> GetUserId(string profileName)
+    public async Task<string?> GetProfileNameByUserEmail(string email)
     {
-        var profile = await _context.Profiles.SingleOrDefaultAsync(x => x.ProfileName == profileName);
-        return profile?.Users.SingleOrDefault()?.Id;
+        var user = await _context.Users.Include(x => x.Profile).SingleOrDefaultAsync(x => x.EmailAddress == email);
+        return user?.Profile?.ProfileName;
     }
 
     public async Task<bool> Exists(string profileName, long userId)

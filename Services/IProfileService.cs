@@ -6,6 +6,6 @@ namespace api.Services;
 public interface IProfileService
 {
     Task Create(CreateProfileRequest request);
-    GetProfileDetailsResponse? GetProfileDetails(string userName);
+    GetProfileDetailsResponse? GetDetails(string userName);
     Task<bool> Patch(long id,  JsonPatchDocument? patchDoc);
 }

@@ -20,20 +20,25 @@ public class GetProfileDetailsResponse
     
     public bool IsOrg { get; init; }
     
+    public List<HostDto> Hosts { get; init; }
+    
     public List<ServiceDto> Services { get; init; }
+    
+    public List<WeeklyHourDto> WeeklyHours { get; set; }
+    
+    public List<DateSpecificHourDto> DateSpecificHours { get; set; }
 }
 
+// TODO: If these classes are still needed, move them to a separate class file.
 public class ServiceDto
 {
     public long Id { get; init; }
     
     public string? Name { get; init; }
     
-    public TimeSpan DefaultDuration { get; init; }
+    public TimeSpan Duration { get; init; }
     
-    public decimal DefaultPrice { get; init; }
-    
-    public List<HostDto> Hosts { get; init; } 
+    public decimal Price { get; init; }
 }
 
 public class HostDto
@@ -46,7 +51,33 @@ public class HostDto
     
     public string PhotoUrl { get; init; }
     
-    public TimeSpan Duration { get; init; }
+    public string Status { get; init; }
+
+    public List<ServiceDto> Services { get; init; }
+}
+
+public class WeeklyHourDto
+{
+    public Guid Id { get; init; }
+ 
+    public long UserId { get; init; }
     
-    public decimal Price { get; init; }
+    public int DayOfWeek { get; init; }
+
+    public TimeOnly StartTime { get; init; }
+
+    public TimeOnly EndTime { get; init; }
+}
+
+public class DateSpecificHourDto
+{
+    public Guid Id { get; init; }
+ 
+    public long UserId { get; init; }
+    
+    public DateOnly SpecificDate { get; init; }
+
+    public TimeOnly StartTime { get; init; }
+
+    public TimeOnly EndTime { get; init; }
 }

@@ -1,6 +1,8 @@
+using System.Security.Claims;
 using System.Text.Json;
 using api.Controllers.Models;
 using api.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
@@ -29,11 +31,39 @@ public class ProfilesController : ApiControllerBase
 
         return Ok();
     }
-
-    [HttpGet("{profileName}")]
-    public ActionResult<GetProfileDetailsResponse>? GetDetail([FromRoute] string profileName)
+    
+    [HttpGet("me")]             
+    public async Task<ActionResult<GetProfileDetailsResponse>?> GetProfilePrivateDetails()
     {
-        var profileDetails = _profileService.GetProfileDetails(profileName);
+        var email = User.FindFirstValue(ClaimTypes.Email);
+        
+        if(email == null)
+        {
+            return NotFound();
+        }
+        
+        var profileName = await _userService.GetProfileNameByUserEmail(email);
+
+        if(profileName == null)
+        {
+            return NotFound();
+        }
+        
+        var profileDetails = _profileService.GetDetails(profileName);
+
+        if (profileDetails == null)
+        {
+            return NotFound();
+        }
+
+        return profileDetails;
+    }
+    
+    [AllowAnonymous]
+    [HttpGet("{profileName}")]
+    public ActionResult<GetProfileDetailsResponse>? GetProfilePublicDetails([FromRoute] string profileName)
+    {
+        var profileDetails = _profileService.GetDetails(profileName);
 
         if (profileDetails == null)
         {

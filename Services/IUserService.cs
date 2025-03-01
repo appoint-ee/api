@@ -5,7 +5,7 @@ namespace api.Services;
 public interface IUserService
 {
     Task Create(CreateUserRequest request);
-    Task<long?> GetUserId(string profileName);
+    Task<string?> GetProfileNameByUserEmail(string email);
     Task<bool> Exists(string profileName, long userId);
     Task<List<GetWeeklyHoursResponse>> GetWeeklyHours(long id);
     Task<bool> UpdateWeeklyHours(long id, List<UpdateWeeklyHoursRequest> weeklyHours);
