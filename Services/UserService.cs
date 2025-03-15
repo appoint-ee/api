@@ -1,6 +1,7 @@
 using api.Controllers.Models;
 using api.Data;
 using api.Data.Entities;
+using api.Services.Dtos;
 using Microsoft.EntityFrameworkCore;
 
 namespace api.Services;
@@ -13,35 +14,43 @@ public class UserService : IUserService
     {
         _context = context ?? throw new ArgumentNullException(nameof(context));
     }
-
-    public async Task Create(CreateUserRequest request)
+    
+    public async Task<IEnumerable<GetUserResponse>> GetAll()
     {
-        var exist = await _context.Users.AnyAsync(x =>
-            x.EmailAddress == request.Email);
-
-        if (exist)
-        {
-            return;
-        }
-        
-        _context.Users.Add(
-            new User
+        return await _context.Users
+            .Select(u => new GetUserResponse()
             {
-                FirstName = request.FirstName,
-                LastName = request.LastName,
-                EmailAddress = request.Email,
-                PhotoUrl = request.PhotoUrl,
-                Status = "Created",
-                City = request.City,
-                Country = request.Country,
-                PhoneNumber = request.PhoneNumber,
-                CreatedAt = default,
-                UpdatedAt = default
-            });
-        
-        await _context.SaveChangesAsync();
+                Id = u.Id,
+                FirstName = u.FirstName,
+                LastName = u.LastName,
+                EmailAddress = u.EmailAddress,
+                PhotoUrl = u.PhotoUrl,
+                City = u.City,
+                Country = u.Country,
+                PhoneNumber = u.PhoneNumber
+                
+            })
+            .ToListAsync();
     }
+    
+    public async Task<GetUserResponse> GetById(long id)
+    {
+        var user = await _context.Users.FirstOrDefaultAsync(u => u.Id == id);
+        if (user == null) return null;
 
+        return new GetUserResponse
+        {
+            Id = user.Id,
+            FirstName = user.FirstName,
+            LastName = user.LastName,
+            EmailAddress = user.EmailAddress,
+            PhotoUrl = user.PhotoUrl,
+            City = user.City,
+            Country = user.Country,
+            PhoneNumber = user.PhoneNumber
+        };
+    }
+    
     public async Task<string?> GetProfileNameByUserEmail(string email)
     {
         var user = await _context.Users.Include(x => x.Profile).SingleOrDefaultAsync(x => x.EmailAddress == email);
@@ -53,6 +62,63 @@ public class UserService : IUserService
         var profile = await _context.Profiles.Include(x => x.Users)
             .SingleOrDefaultAsync(x => x.ProfileName == profileName);
         return profile?.Users.Any(u => u.Id == userId) ?? false;
+    }
+
+    public async Task<CreateUserResponse?> Create(CreateUserRequest request)
+    {
+        var exist = await _context.Users.AnyAsync(x =>
+            x.EmailAddress == request.Email);
+
+        if (exist)
+        {
+            return null;
+        }
+
+        var user = new User
+        {
+            FirstName = request.FirstName,
+            LastName = request.LastName,
+            EmailAddress = request.Email,
+            PhotoUrl = request.PhotoUrl,
+            Status = "Created",
+            City = request.City,
+            Country = request.Country,
+            PhoneNumber = request.PhoneNumber,
+            CreatedAt = default,
+            UpdatedAt = default
+        };
+        
+        _context.Users.Add(user);
+        await _context.SaveChangesAsync();
+        return new CreateUserResponse
+        {
+            Id = user.Id,
+            FirstName = user.FirstName,
+            LastName = user.LastName,
+            EmailAddress = user.EmailAddress,
+            PhotoUrl = user.PhotoUrl,
+            City = user.City,
+            Country = user.Country,
+            PhoneNumber = user.PhoneNumber
+        };
+    }
+
+    public async Task<bool> Update(long id, UpdateUserRequest userRequest)
+    {
+        var existingUser = await _context.Users.Where(s => s.Id == id).FirstOrDefaultAsync();
+        if (existingUser == null) return false;
+           
+        existingUser.FirstName = userRequest.FirstName;
+        existingUser.LastName = userRequest.LastName;
+        existingUser.EmailAddress = userRequest.EmailAddress;
+        existingUser.PhotoUrl = userRequest.PhotoUrl;
+        existingUser.City = userRequest.City;
+        existingUser.Country = userRequest.Country;
+        existingUser.PhoneNumber = userRequest.PhoneNumber;
+        existingUser.UpdatedAt = DateTime.UtcNow;
+          
+        await _context.SaveChangesAsync();
+        return true;
     }
 
     public async Task<List<GetWeeklyHoursResponse>> GetWeeklyHours(long id)
