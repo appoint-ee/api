@@ -1,6 +1,7 @@
 using api.Controllers.Models;
 using api.Data;
 using api.Data.Entities;
+using api.Services.Dtos;
 using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.EntityFrameworkCore;
 

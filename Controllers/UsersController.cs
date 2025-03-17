@@ -39,7 +39,8 @@ public class UsersController : ApiControllerBase
 
         if (createdUser == null)
         {
-            return Conflict();
+            // TODO: Improve HTTP status code handling
+            return BadRequest();
         }
         
         return CreatedAtAction(nameof(GetById), 
@@ -53,7 +54,9 @@ public class UsersController : ApiControllerBase
     public async Task<IActionResult> Update([FromRoute] long id, [FromBody] UpdateUserRequest request)
     {
         var updated = await _userService.Update(id, request);
-        if (!updated) return NotFound();
+        
+        // TODO: Improve HTTP status code handling
+        if (!updated) return BadRequest();
         
         return NoContent();
     }

@@ -9,4 +9,6 @@ public class UpdateUserRequest
     public string City { get; init; }
     public string Country { get; init; }
     public string PhoneNumber { get; init; }
+    public long? ProfileId { get; init; }
+    public IEnumerable<ServiceDto> Services { get; init; }
 }

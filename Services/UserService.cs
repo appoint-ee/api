@@ -27,7 +27,8 @@ public class UserService : IUserService
                 PhotoUrl = u.PhotoUrl,
                 City = u.City,
                 Country = u.Country,
-                PhoneNumber = u.PhoneNumber
+                PhoneNumber = u.PhoneNumber,
+                ProfileId = u.ProfileId
                 
             })
             .ToListAsync();
@@ -35,7 +36,10 @@ public class UserService : IUserService
     
     public async Task<GetUserResponse> GetById(long id)
     {
-        var user = await _context.Users.FirstOrDefaultAsync(u => u.Id == id);
+        var user = await _context.Users
+            .Include(x=> x.UserServices)
+            .ThenInclude(x => x.Service)
+            .FirstOrDefaultAsync(u => u.Id == id);
         if (user == null) return null;
 
         return new GetUserResponse
@@ -47,7 +51,16 @@ public class UserService : IUserService
             PhotoUrl = user.PhotoUrl,
             City = user.City,
             Country = user.Country,
-            PhoneNumber = user.PhoneNumber
+            PhoneNumber = user.PhoneNumber,
+            ProfileId = user.ProfileId,
+            Services = user.UserServices
+                .Select(x => new ServiceDto()
+                {
+                    Id = x.Service.Id,
+                    Name = x.Service.Name,
+                    Duration = x.Duration,
+                    Price = x.Price
+                })
         };
     }
     
@@ -66,30 +79,59 @@ public class UserService : IUserService
 
     public async Task<CreateUserResponse?> Create(CreateUserRequest request)
     {
-        var exist = await _context.Users.AnyAsync(x =>
-            x.EmailAddress == request.Email);
+        var userExists = await _context.Users.AnyAsync(x =>
+            x.EmailAddress == request.EmailAddress);
 
-        if (exist)
+        if (userExists)
         {
             return null;
+        }
+
+        if (request.ProfileId != null)
+        {
+            var profileExists = await _context.Profiles.AnyAsync(x =>
+                x.Id == request.ProfileId);
+
+            if (!profileExists)
+            {
+                return null;
+            }
         }
 
         var user = new User
         {
             FirstName = request.FirstName,
             LastName = request.LastName,
-            EmailAddress = request.Email,
+            EmailAddress = request.EmailAddress,
             PhotoUrl = request.PhotoUrl,
             Status = "Created",
             City = request.City,
             Country = request.Country,
             PhoneNumber = request.PhoneNumber,
+            ProfileId = request.ProfileId,
             CreatedAt = default,
             UpdatedAt = default
         };
         
         _context.Users.Add(user);
+
         await _context.SaveChangesAsync();
+
+        foreach (var service in request.Services)
+        {
+            _context.UserServices.Add(
+                new Data.Entities.UserService()
+                {
+                    UserId = user.Id,
+                    ServiceId = service.Id,
+                    Duration = service.Duration,
+                    Price = service.Price,
+                    CreatedAt = default
+                });
+        }
+
+        await _context.SaveChangesAsync();
+
         return new CreateUserResponse
         {
             Id = user.Id,
@@ -99,7 +141,8 @@ public class UserService : IUserService
             PhotoUrl = user.PhotoUrl,
             City = user.City,
             Country = user.Country,
-            PhoneNumber = user.PhoneNumber
+            PhoneNumber = user.PhoneNumber,
+            Services = request.Services
         };
     }
 
@@ -108,6 +151,18 @@ public class UserService : IUserService
         var existingUser = await _context.Users.Where(s => s.Id == id).FirstOrDefaultAsync();
         if (existingUser == null) return false;
            
+        if (userRequest.ProfileId != null
+            && userRequest.ProfileId != existingUser.ProfileId)
+        {
+            var profileExists = await _context.Profiles.AnyAsync(x =>
+                x.Id == userRequest.ProfileId);
+
+            if (!profileExists)
+            {
+                return false;
+            }
+        }
+        
         existingUser.FirstName = userRequest.FirstName;
         existingUser.LastName = userRequest.LastName;
         existingUser.EmailAddress = userRequest.EmailAddress;
@@ -115,8 +170,38 @@ public class UserService : IUserService
         existingUser.City = userRequest.City;
         existingUser.Country = userRequest.Country;
         existingUser.PhoneNumber = userRequest.PhoneNumber;
+        existingUser.ProfileId = userRequest.ProfileId;
         existingUser.UpdatedAt = DateTime.UtcNow;
-          
+
+        var requestedServiceIds = userRequest.Services.Select(s => s.Id).ToHashSet();
+        
+        var userServicesInTheDb = _context.UserServices
+            .Where(x => requestedServiceIds.Contains(x.ServiceId)
+                && x.UserId == existingUser.Id)
+            .ToDictionary(x => x.ServiceId);
+        
+        foreach (var requestedService in userRequest.Services)
+        {
+            if (userServicesInTheDb.TryGetValue(requestedService.Id, out var service))
+            {
+                service.Duration = requestedService.Duration;
+                service.Price = requestedService.Price;
+                service.UpdatedAt = default;
+            }
+            else
+            {
+                _context.UserServices.Add(new Data.Entities.UserService
+                {
+                    UserId = existingUser.Id,
+                    ServiceId = requestedService.Id,
+                    Duration = requestedService.Duration,
+                    Price = requestedService.Price,
+                    CreatedAt = default,
+                    UpdatedAt = default
+                });
+            }
+        }
+
         await _context.SaveChangesAsync();
         return true;
     }

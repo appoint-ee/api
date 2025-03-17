@@ -10,4 +10,5 @@ public class CreateUserResponse
     public string City { get; init; }
     public string Country { get; init; }
     public string PhoneNumber { get; init; }
+    public IEnumerable<ServiceDto> Services { get; init; }
 }
