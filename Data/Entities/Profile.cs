@@ -31,6 +31,9 @@ public class Profile
     [Required]
     public bool IsOrg { get; set; }
     
+    [Required]
+    public bool IsOnline { get; set; }
+    
     public ICollection<User> Users { get; set; } = new List<User>();
     
     [DatabaseGenerated(DatabaseGeneratedOption.Identity)]

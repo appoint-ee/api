@@ -66,14 +66,19 @@ public class UserService : IUserService
     
     public async Task<string?> GetProfileNameByUserEmail(string email)
     {
-        var user = await _context.Users.Include(x => x.Profile).SingleOrDefaultAsync(x => x.EmailAddress == email);
+        var user = await _context.Users
+            .Include(x => x.Profile)
+            .SingleOrDefaultAsync(x => x.EmailAddress == email);
+        
         return user?.Profile?.ProfileName;
     }
 
     public async Task<bool> Exists(string profileName, long userId)
     {
-        var profile = await _context.Profiles.Include(x => x.Users)
+        var profile = await _context.Profiles
+            .Include(x => x.Users)
             .SingleOrDefaultAsync(x => x.ProfileName == profileName);
+        
         return profile?.Users.Any(u => u.Id == userId) ?? false;
     }
 

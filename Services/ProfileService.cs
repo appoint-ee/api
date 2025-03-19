@@ -28,6 +28,7 @@ public class ProfileService : IProfileService
             LangCode = request.LangCode,
             PreferredTimeZone = request.PreferredTimeZone,
             IsOrg = request.IsOrg,
+            IsOnline = request.IsOnline,
             CreatedAt = default,
             UpdatedAt = default
         };
@@ -65,6 +66,7 @@ public class ProfileService : IProfileService
                 LangCode = profile.LangCode,
                 PreferredTimeZone = profile.PreferredTimeZone,
                 IsOrg = profile.IsOrg,
+                IsOnline = profile.IsOnline,
                 Hosts = GetHosts(profile),
                 Services = GetServices(profile).ToList(),
             }).FirstOrDefault();

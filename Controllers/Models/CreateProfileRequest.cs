@@ -18,5 +18,7 @@ public class CreateProfileRequest
     
     public bool IsOrg { get; set; }
     
+    public bool IsOnline { get; set; }
+
     public ICollection<long> UserIds { get; set; } = new List<long>();
 }

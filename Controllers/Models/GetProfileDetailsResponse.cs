@@ -22,6 +22,8 @@ public class GetProfileDetailsResponse
     
     public bool IsOrg { get; init; }
     
+    public bool IsOnline { get; init; }
+    
     public List<HostDto> Hosts { get; init; }
     
     public List<ServiceDto> Services { get; init; }

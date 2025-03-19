@@ -25,9 +25,9 @@ public class ProfilesController : ApiControllerBase
     }
     
     [HttpPost]
-    public ActionResult Create([FromBody] CreateProfileRequest request)
+    public async Task<ActionResult> Create([FromBody] CreateProfileRequest request)
     {
-        _profileService.Create(request);
+        await _profileService.Create(request);
 
         return Ok();
     }

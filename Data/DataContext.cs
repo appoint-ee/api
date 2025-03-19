@@ -284,7 +284,15 @@ public class DataContext : IdentityDbContext<IdentityUser>
             
             entity.Property(e => e.IsOrg)
                 .HasColumnName("is_org")
-                .HasMaxLength(50);  
+                .HasColumnType("boolean")
+                .IsRequired()
+                .HasDefaultValue(false);
+
+            entity.Property(e => e.IsOnline)
+                .HasColumnName("is_online")
+                .HasColumnType("boolean")
+                .IsRequired()
+                .HasDefaultValue(false);
             
             entity.Property(e => e.CreatedAt)
                 .HasColumnName("created_at")
