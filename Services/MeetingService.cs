@@ -5,6 +5,8 @@ using api.Data.Entities;
 using api.Data.Enums;
 using api.Extensions;
 using api.Models;
+using api.Services.Dtos;
+using Microsoft.EntityFrameworkCore;
 using static System.Enum;
 
 namespace api.Services;
@@ -34,11 +36,23 @@ public class MeetingService : IMeetingService
             throw new Exception("Host not found!");
         }
         
-        var service = _dataContext.Services.SingleOrDefault(u => u.Id == request.ServiceId);
+        var service = _dataContext.Services
+            .Include(s => s.UserServices)
+            .SingleOrDefault(u => u.Id == request.ServiceId);
 
         if (service == null)
         {
             throw new Exception("Service not found!");
+        }
+
+        var host = service
+            .UserServices
+            .FirstOrDefault(us => us.UserId == request.HostId
+                && us.ServiceId == request.ServiceId);
+        
+        if (host == null)
+        {
+            throw new Exception("The selected host does not offer this service!");
         }
 
         var meeting = new Meeting()
@@ -48,8 +62,8 @@ public class MeetingService : IMeetingService
             StartTime = request.StartTime,
             EndTime = request.EndTime,
             ServiceId = request.ServiceId,
-            Duration = request.EndTime - request.StartTime,
-            Price = request.Price ?? service.DefaultPrice,
+            Duration = host.Duration,
+            Price = host.Price,
             CreatedAt = DateTime.Now
         };
         
@@ -60,42 +74,55 @@ public class MeetingService : IMeetingService
             new()
             {
                 UserId = request.HostId,
-                IsCreator = true,
+                IsHost = true,
                 CreatedAt = DateTime.Now,
+                Meeting = meeting
+            },
+            new()
+            { 
+                UserId = request.CreatorId, 
+                IsHost = false, 
+                CreatedAt = DateTime.Now, 
                 Meeting = meeting
             }
         };
-        
-        if (!string.IsNullOrWhiteSpace(request.CreatorEmailAddress))
-        {
-            var user = _dataContext.Users.SingleOrDefault(x => x.EmailAddress == request.CreatorEmailAddress);
-
-            if (user == null)
-            {
-                user = new User()
-                {
-                    EmailAddress = request.CreatorEmailAddress,
-                    FirstName = request.CreatorFirstName,
-                    LastName = request.CreatorLastName,
-                    Status = "Created",
-                    CreatedAt = DateTime.Now
-                };
-
-                _dataContext.Users.Add(user);
-            }
-            
-            attendees.Add(
-                new()
-                { 
-                    User = user, 
-                    IsCreator = true, 
-                    CreatedAt = DateTime.Now, 
-                    Meeting = meeting
-                });
-        }
-        
+ 
         _dataContext.MeetingAttendees.AddRange(attendees);
         _dataContext.SaveChanges();
+    }
+    
+    public async Task<GetMeetingDetailResponse?> Get(Guid id)
+    {
+        var meeting = await _dataContext.Meetings
+            .Include(m => m.Attendees)
+            .Include(m => m.Service)
+                .ThenInclude(s => s.UserServices)
+            .Where(m => m.Id == id)
+            .Select(m => new GetMeetingDetailResponse()
+            {
+                Id = m.Id,
+                Title = m.Title,
+                Description = m.Description,
+                ServiceName = m.Service.Name,
+                StartTime = m.StartTime,
+                EndTime = m.EndTime,
+                Duration = m.Service.UserServices
+                    .FirstOrDefault(us => us.UserId == m.Attendees
+                        .FirstOrDefault(ma=> ma.IsHost)!.UserId)!.Duration,
+                Price = m.Service.UserServices
+                    .FirstOrDefault(us => us.UserId == m.Attendees
+                        .FirstOrDefault(ma => ma.IsHost)!.UserId)!.Price,
+                Attendees = m.Attendees.Select(x=> new AttendeeDto()
+                {
+                    Id = x.Id,
+                    UserId = x.UserId,
+                    IsHost = x.IsHost,
+                    MeetingId = x.MeetingId,
+                    Status = x.Status
+                }).ToList()
+            }).FirstOrDefaultAsync();
+        
+        return meeting;
     }
 
     public async Task<List<GetMeetingResponse>?> Get(long userId, DateTime timeMin, DateTime timeMax)
@@ -213,7 +240,7 @@ public class MeetingService : IMeetingService
                     new() 
                     { 
                         UserId = userId, 
-                        IsCreator = true, 
+                        IsHost = false, 
                         Status = attendeeStatus, 
                         CreatedAt = DateTime.Now, 
                         Meeting = meeting

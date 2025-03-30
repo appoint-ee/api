@@ -14,7 +14,7 @@ public class MeetingAttendee
     [ForeignKey("UserId")]
     public User? User { get; set; }
     
-    public bool IsCreator { get; set; }
+    public bool IsHost { get; set; }
 
     public Guid MeetingId { get; set; }
     

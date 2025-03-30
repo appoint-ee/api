@@ -223,8 +223,8 @@ public class DataContext : IdentityDbContext<IdentityUser>
                 .HasColumnName("user_id")
                 .IsRequired();
 
-            entity.Property(e => e.IsCreator)
-                .HasColumnName("is_creator")
+            entity.Property(e => e.IsHost)
+                .HasColumnName("is_host")
                 .IsRequired();
 
             entity.Property(e => e.Status)

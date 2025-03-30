@@ -64,6 +64,26 @@ public class UserService : IUserService
         };
     }
     
+    public async Task<GetUserResponse> GetByEmail(string email)
+    {
+        var user = await _context.Users
+            .FirstOrDefaultAsync(u => u.EmailAddress == email);
+        if (user == null) return null;
+
+        return new GetUserResponse
+        {
+            Id = user.Id,
+            FirstName = user.FirstName,
+            LastName = user.LastName,
+            EmailAddress = user.EmailAddress,
+            PhotoUrl = user.PhotoUrl,
+            City = user.City,
+            Country = user.Country,
+            PhoneNumber = user.PhoneNumber,
+            ProfileId = user.ProfileId,
+        };
+    }
+    
     public async Task<string?> GetProfileNameByUserEmail(string email)
     {
         var user = await _context.Users
