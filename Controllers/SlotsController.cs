@@ -1,5 +1,6 @@
 using api.Models;
 using api.Services;
+using api.Services.Dtos;
 using Microsoft.AspNetCore.Mvc;
 
 namespace api.Controllers;
@@ -22,7 +23,14 @@ public class SlotsController : ApiControllerBase
     [HttpGet("time")] 
     public async Task<ActionResult<List<TimeSlot>>> GetTimeSlots([FromQuery] long userId, DateTime start, DateTime end)
     {
-        var meetings = await _meetingService.Get(userId, start, end);
+        var getMeetingRequest = new GetMeetingRequest()
+        {
+            UserId = userId,
+            StartDate = start,
+            EndDate = end
+        };
+        
+        var meetings = await _meetingService.GetAll(getMeetingRequest);
 
         var timeSlots = _slotService.GenerateTimeSlots(userId, start, end, meetings?.ToArray());
 
@@ -32,7 +40,14 @@ public class SlotsController : ApiControllerBase
     [HttpGet("day")]
     public async Task<ActionResult<List<DaySlot>>> GetDaySlots([FromQuery] long userId, DateTime start, DateTime end)
     {
-        var meetings = await _meetingService.Get(userId, start, end);
+        var getMeetingRequest = new GetMeetingRequest()
+        {
+            UserId = userId,
+            StartDate = start,
+            EndDate = end
+        };
+        
+        var meetings = await _meetingService.GetAll(getMeetingRequest);
 
         var daySlots = _slotService.GenerateDaySlots(userId, start, end, meetings?.ToArray());
 

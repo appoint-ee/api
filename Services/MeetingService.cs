@@ -125,16 +125,28 @@ public class MeetingService : IMeetingService
         return meeting;
     }
 
-    public async Task<List<GetMeetingResponse>?> Get(long userId, DateTime timeMin, DateTime timeMax)
+    public async Task<List<GetMeetingResponse>?> GetAll(GetMeetingRequest request)
     {
-        await SyncWithGoogleCalendar(userId); 
+        // await SyncWithGoogleCalendar(request.UserId); 
 
-        var meetings = _dataContext.MeetingAttendees
-            .Where(x => x.UserId == userId)
+        var query = _dataContext.MeetingAttendees
+            .Where(x => x.UserId == request.UserId)
             .Select(x => x.Meeting)
-            .Where(m => m.StartTime < timeMin && timeMin < m.EndTime
-                        || timeMin < m.StartTime && m.EndTime < timeMax
-                        || m.StartTime < timeMax && timeMax < m.EndTime)
+            .Where(m => m.StartTime < request.StartDate && request.StartDate < m.EndTime
+                        || request.StartDate < m.StartTime && m.EndTime < request.EndDate
+                        || m.StartTime < request.EndDate && request.EndDate < m.EndTime);
+            
+        if (request.ServiceId is { Count: > 0 })
+        {
+            query = query.Where(m => request.ServiceId.Contains(m.ServiceId));
+        }
+
+        if (!string.IsNullOrWhiteSpace(request.Title))
+        {
+            query = query.Where(m => m.Title.Contains(request.Title));
+        }
+        
+        var meetings = await query
             .Select( m => new GetMeetingResponse()
             {
                 Id = m.Id,
@@ -142,10 +154,11 @@ public class MeetingService : IMeetingService
                 Description = m.Description,
                 StartTime = m.StartTime,
                 EndTime = m.EndTime,
+                ServiceId = m.Service.Id,
                 ServiceName = m.Service.Name,
                 Duration = m.Duration,
                 Price = m.Price
-            }).ToList();
+            }).ToListAsync();
 
         return meetings;
     }

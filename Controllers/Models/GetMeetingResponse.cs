@@ -10,6 +10,8 @@ public class GetMeetingResponse
     
     public string Status { get; init; }
     
+    public long ServiceId { get; init; }
+
     public string ServiceName { get; init; }
 
     public TimeSpan Duration { get; init; }

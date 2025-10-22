@@ -72,12 +72,9 @@ public class MeetingsController : ApiControllerBase
     }
     
     [HttpGet]
-    public async Task<ActionResult<List<GetMeetingResponse>?>> Get([FromQuery] DateTime? start, DateTime? end)
+    public async Task<ActionResult<List<GetMeetingResponse>?>> GetAll([FromQuery] GetMeetingRequest request)
     {
         var authorizedEmail = User.FindFirstValue(ClaimTypes.Email);
-
-        start ??= DateTime.Now.AddMonths(-1);
-        end ??= DateTime.Now;
 
         if (authorizedEmail == null)
         {
@@ -85,8 +82,9 @@ public class MeetingsController : ApiControllerBase
         }
         
         var authorizedUser = await _userService.GetByEmail(authorizedEmail);
-
-        var meeting = await _meetingService.Get(authorizedUser.Id, start.Value, end.Value);
+        request.UserId = authorizedUser.Id;
+        
+        var meeting = await _meetingService.GetAll(request);
 
         if (meeting == null)
         {

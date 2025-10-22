@@ -142,21 +142,24 @@ public class UserService : IUserService
 
         await _context.SaveChangesAsync();
 
-        foreach (var service in request.Services)
+        if (request?.Services != null)
         {
-            _context.UserServices.Add(
-                new Data.Entities.UserService()
-                {
-                    UserId = user.Id,
-                    ServiceId = service.Id,
-                    Duration = service.Duration,
-                    Price = service.Price,
-                    CreatedAt = default
-                });
+            foreach (var service in request?.Services)
+            {
+                _context.UserServices.Add(
+                    new Data.Entities.UserService()
+                    {
+                        UserId = user.Id,
+                        ServiceId = service.Id,
+                        Duration = service.Duration,
+                        Price = service.Price,
+                        CreatedAt = default
+                    });
+            }
+
+            await _context.SaveChangesAsync();
         }
-
-        await _context.SaveChangesAsync();
-
+        
         return new CreateUserResponse
         {
             Id = user.Id,
@@ -167,7 +170,7 @@ public class UserService : IUserService
             City = user.City,
             Country = user.Country,
             PhoneNumber = user.PhoneNumber,
-            Services = request.Services
+            Services = request?.Services
         };
     }
 

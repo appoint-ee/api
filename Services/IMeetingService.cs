@@ -7,5 +7,5 @@ public interface IMeetingService
 {
     void Create(CreateMeetingRequest request);
     Task<GetMeetingDetailResponse?> Get(Guid id);
-    Task<List<GetMeetingResponse>?> Get(long userId, DateTime timeMin, DateTime timeMax);
+    Task<List<GetMeetingResponse>?> GetAll(GetMeetingRequest request);
 }
