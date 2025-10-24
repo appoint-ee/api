@@ -8,4 +8,5 @@ public interface IMeetingService
     void Create(CreateMeetingRequest request);
     Task<GetMeetingDetailResponse?> Get(Guid id);
     Task<List<GetMeetingResponse>?> GetAll(GetMeetingRequest request);
+    Task<bool> Update(UpdateMeetingRequest request);
 }

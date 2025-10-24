@@ -162,7 +162,33 @@ public class MeetingService : IMeetingService
 
         return meetings;
     }
-    
+
+    public async Task<bool> Update(UpdateMeetingRequest request)
+    {
+        var meeting = await _dataContext.Meetings
+            .Include(m => m.Attendees)
+            .FirstOrDefaultAsync(m => m.Id == request.Id);
+
+        if (meeting == null)
+        {
+            return false;
+        }
+
+        var isUserEligible = meeting.Attendees.Any(m => m.UserId == request.AttendeeId);
+        if (!isUserEligible)
+        {
+            return false;
+        }
+
+        foreach (var attendee in meeting.Attendees)
+        {
+            attendee.Status = request.Status;
+        }
+
+        await _dataContext.SaveChangesAsync();
+        return true;
+    }
+
     private async Task SyncWithGoogleCalendar(long userId)
     {
         var startTime = DateTime.Today.AddMonths(-1);

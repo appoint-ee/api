@@ -1,6 +1,7 @@
 using System.Security.Claims;
 using Microsoft.AspNetCore.Mvc;
 using api.Controllers.Models;
+using api.Data.Enums;
 using api.Services;
 using api.Services.Dtos;
 using Microsoft.AspNetCore.Authorization;
@@ -105,5 +106,34 @@ public class MeetingsController : ApiControllerBase
         }
         
         return Ok(meeting);
+    }
+    
+    [HttpPut("{id:guid}")]
+    public async Task<ActionResult> Update(Guid id, [FromBody] AttendeeStatus status)
+    {
+        var authorizedEmail = User.FindFirstValue(ClaimTypes.Email);
+
+        if(authorizedEmail == null)
+        {
+            return StatusCode(StatusCodes.Status500InternalServerError);
+        }
+
+        var authorizedUser = await _userService.GetByEmail(authorizedEmail);
+
+        var updateMeetingRequest = new UpdateMeetingRequest()
+        {
+            Id = id,
+            AttendeeId = authorizedUser.Id,
+            Status = status
+        };
+
+        var success = await _meetingService.Update(updateMeetingRequest);
+
+        if (!success)
+        {
+            return NotFound();
+        }
+        
+        return Ok();
     }
 }
