@@ -22,7 +22,6 @@ public class Service
     [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
     public DateTime CreatedAt { get; set; }
 
-    [DatabaseGenerated(DatabaseGeneratedOption.Computed)]
     public DateTime UpdatedAt { get; set; }
     
     public ICollection<UserService> UserServices { get; set; }

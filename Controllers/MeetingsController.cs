@@ -108,8 +108,8 @@ public class MeetingsController : ApiControllerBase
         return Ok(meeting);
     }
     
-    [HttpPut("{id:guid}")]
-    public async Task<ActionResult> Update(Guid id, [FromBody] AttendeeStatus status)
+    [HttpPatch("{id:guid}")]
+    public async Task<ActionResult> Patch(Guid id, [FromBody] UpdateMeetingRequest request)
     {
         var authorizedEmail = User.FindFirstValue(ClaimTypes.Email);
 
@@ -120,14 +120,8 @@ public class MeetingsController : ApiControllerBase
 
         var authorizedUser = await _userService.GetByEmail(authorizedEmail);
 
-        var updateMeetingRequest = new UpdateMeetingRequest()
-        {
-            Id = id,
-            AttendeeId = authorizedUser.Id,
-            Status = status
-        };
-
-        var success = await _meetingService.Update(updateMeetingRequest);
+        request.AttendeeId = authorizedUser.Id;
+        var success = await _meetingService.Update(id, request);
 
         if (!success)
         {

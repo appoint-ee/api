@@ -37,7 +37,6 @@ public class Meeting // TODO: consider renaming as appointment
     [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
     public DateTime CreatedAt { get; set; }
     
-    [DatabaseGenerated(DatabaseGeneratedOption.Computed)]
     public DateTime UpdatedAt { get; set; }
     
     public ICollection<MeetingAttendee> Attendees { get; set; }

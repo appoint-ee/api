@@ -163,11 +163,11 @@ public class MeetingService : IMeetingService
         return meetings;
     }
 
-    public async Task<bool> Update(UpdateMeetingRequest request)
+    public async Task<bool> Update(Guid id, UpdateMeetingRequest request)
     {
         var meeting = await _dataContext.Meetings
             .Include(m => m.Attendees)
-            .FirstOrDefaultAsync(m => m.Id == request.Id);
+            .FirstOrDefaultAsync(m => m.Id == id);
 
         if (meeting == null)
         {
@@ -180,9 +180,28 @@ public class MeetingService : IMeetingService
             return false;
         }
 
-        foreach (var attendee in meeting.Attendees)
+        if (request.StartTime.HasValue
+            && request.EndTime.HasValue)
         {
-            attendee.Status = request.Status;
+            meeting.StartTime = request.StartTime.Value;
+            meeting.EndTime = request.EndTime.Value;
+        }
+        
+        if (request.Status.HasValue)
+        {
+            var oneOnOneMeeting = meeting.Attendees.Count == 2;
+            if (oneOnOneMeeting)
+            {
+                foreach (var attendee in meeting.Attendees)
+                {
+                    attendee.Status = request.Status.Value;
+                }
+            }
+            else
+            {
+                var attendee = meeting.Attendees.FirstOrDefault(a => a.UserId == request.AttendeeId);
+                attendee!.Status = request.Status.Value;
+            }
         }
 
         await _dataContext.SaveChangesAsync();

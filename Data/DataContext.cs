@@ -557,4 +557,22 @@ public class DataContext : IdentityDbContext<IdentityUser>
                 .HasDefaultValueSql("CURRENT_TIMESTAMP");
         });
     }
+    
+    public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
+    {
+        var modifiedEntries = ChangeTracker.Entries()
+            .Where(e => e.State == EntityState.Modified);
+
+        foreach (var entry in modifiedEntries)
+        {
+            var updatedAt = entry.Entity.GetType().GetProperty("UpdatedAt");
+            if (updatedAt != null 
+                && updatedAt.CanWrite)
+            {
+                updatedAt.SetValue(entry.Entity, DateTime.Now);
+            }
+        }
+
+        return base.SaveChangesAsync(cancellationToken);
+    }
 }
