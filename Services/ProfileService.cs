@@ -53,32 +53,35 @@ public class ProfileService : IProfileService
         var profile = _context.Profiles
             .Where(profile => profile.ProfileName == name)
             .Include(p => p.Users)
-            .ThenInclude(u => u.UserServices)
-            .ThenInclude(us => us.Service)
-            .Select(profile => new GetProfileDetailsResponse()
-            {
-                Id = profile.Id,
-                UserName = profile.ProfileName,
-                EmailAddress = profile.EmailAddress,
-                PhotoUrl = profile.PhotoUrl,
-                Address = profile.Address,
-                CountryCode = profile.CountryCode,
-                LangCode = profile.LangCode,
-                PreferredTimeZone = profile.PreferredTimeZone,
-                IsOrg = profile.IsOrg,
-                IsOnline = profile.IsOnline,
-                Hosts = GetHosts(profile),
-                Services = GetServices(profile).ToList(),
-            }).FirstOrDefault();
+                .ThenInclude(u => u.UserServices)
+                .ThenInclude(us => us.Service)
+            .FirstOrDefault();
+        
+        if (profile == null) return null;
+        var (services, hosts) = GetServicesAndHosts(profile);
+        
+        if (services.Count == 0 || hosts.Count == 0) return null;
+        var hostIds = hosts.Select(x => x.Id).ToList();
+        var weeklyHours = GetWeeklyHours(hostIds);
+        var dateSpecificHours = GetDateSpecificHours(hostIds);
 
-        if (profile != null)
-        {
-            var hostIds = profile.Hosts.Select(x => x.Id).ToList();
-            profile.WeeklyHours = GetWeeklyHours(hostIds);
-            profile.DateSpecificHours = GetDateSpecificHours(hostIds);
-        }
-
-        return profile;
+        return new GetProfileDetailsResponse() 
+        { 
+            Id = profile.Id, 
+            UserName = profile.ProfileName, 
+            EmailAddress = profile.EmailAddress, 
+            PhotoUrl = profile.PhotoUrl,
+            Address = profile.Address, 
+            CountryCode = profile.CountryCode, 
+            LangCode = profile.LangCode, 
+            PreferredTimeZone = profile.PreferredTimeZone, 
+            IsOrg = profile.IsOrg, 
+            IsOnline = profile.IsOnline, 
+            Hosts = hosts, 
+            Services = services,
+            WeeklyHours = weeklyHours,
+            DateSpecificHours = dateSpecificHours
+        };
     }
 
     public async Task<bool> Patch(long id, JsonPatchDocument? patchDoc)
@@ -96,24 +99,14 @@ public class ProfileService : IProfileService
         return true;
     }
 
-    private static List<ServiceDto> GetServices(Profile profile)
+    private static (List<ServiceDto> Services, List<HostDto> Hosts) GetServicesAndHosts(Profile profile)
     {
-        return profile.Users
-            .SelectMany(u => u.UserServices)
-            .GroupBy(us => us.Service.Id)
-            .Select(g => new ServiceDto
-            {
-                Id = g.Key,
-                Name = g.First().Service.Name,
-                Duration = g.First().Service.DefaultDuration,
-                Price = g.First().Service.DefaultPrice
-            })
-            .ToList();
-    }
-    
-    private static List<HostDto> GetHosts(Profile profile)
-    {
-        return profile.Users
+        if (profile?.Users == null || profile.Users.Count == 0)
+        {
+            return (new List<ServiceDto>(), new List<HostDto>());
+        }
+        
+        var flattenedUserServices = profile.Users
             .SelectMany(u => u.UserServices.Select(us => new
             {
                 ServiceId = us.Service.Id,
@@ -133,17 +126,47 @@ public class ProfileService : IProfileService
                     PhotoUrl = u.PhotoUrl,
                     Status = u.Status
                 }
-            }))
-            .GroupBy(x => x.HostId)
-            .Select(g => new HostDto()
+            }));
+
+        if (flattenedUserServices == null)
+        {
+            return (new List<ServiceDto>(), new List<HostDto>());
+        }
+
+        var services =  flattenedUserServices.GroupBy(x => x.ServiceId)
+            .Select(g =>
+                {
+                    var service = g.First().Service;
+
+                    return new ServiceDto()
+                    {
+                        Id = g.Key,
+                        Name = service.Name,
+                        Hosts = g.Select(x => x.Host)
+                            .DistinctBy(h => h.Id)
+                            .ToList()
+                    };
+                }).ToList();
+
+        var hosts = flattenedUserServices.GroupBy(x => x.HostId)
+            .Select(g =>
             {
-                Id = g.Key,
-                FirstName = g.First().Host.FirstName,
-                LastName = g.First().Host.LastName,
-                Services = g.Select(x => x.Service)
-                    .DistinctBy(h => h.Id)
-                    .ToList()
+                var host = g.First().Host;
+                
+                return new HostDto
+                {
+                    Id = g.Key,
+                    FirstName = host.FirstName,
+                    LastName = host.LastName,
+                    PhotoUrl = host.PhotoUrl,
+                    Status = host.Status,
+                    Services = g.Select(x => x.Service)
+                        .DistinctBy(h => h.Id)
+                        .ToList()
+                };
             }).ToList();
+
+        return (services, hosts);
     }
     
     private List<WeeklyHourDto> GetWeeklyHours(List<long> userIds)
