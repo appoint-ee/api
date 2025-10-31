@@ -55,12 +55,15 @@ public class MeetingService : IMeetingService
             throw new Exception("The selected host does not offer this service!");
         }
 
+        var startTimeUnspecified = DateTime.SpecifyKind(request.StartTime, DateTimeKind.Unspecified);
+        var endTimeUnspecified = DateTime.SpecifyKind(request.EndTime, DateTimeKind.Unspecified);
+            
         var meeting = new Meeting()
         {
             Title = service.Name,
             Description = request.Description,
-            StartTime = request.StartTime,
-            EndTime = request.EndTime,
+            StartTime = startTimeUnspecified,
+            EndTime = endTimeUnspecified,
             ServiceId = request.ServiceId,
             Duration = host.Duration,
             Price = host.Price,
