@@ -7,7 +7,7 @@ public interface IUserService
 {
     Task<IEnumerable<GetUserResponse>> GetAll();
     Task<GetUserResponse> GetById(long id);
-    Task<GetUserResponse> GetByEmail(string email);
+    Task<GetUserResponse?> GetByEmail(string email);
     Task<string?> GetProfileNameByUserEmail(string email);
     Task<bool> Exists(string profileName, long userId);
     Task<CreateUserResponse?> Create(CreateUserRequest userRequest);

@@ -64,11 +64,15 @@ public class UserService : IUserService
         };
     }
     
-    public async Task<GetUserResponse> GetByEmail(string email)
+    public async Task<GetUserResponse?> GetByEmail(string email)
     {
         var user = await _context.Users
             .FirstOrDefaultAsync(u => u.EmailAddress == email);
-        if (user == null) return null;
+        
+        if (user == null)
+        {
+            return null;
+        }
 
         return new GetUserResponse
         {
