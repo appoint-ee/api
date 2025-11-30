@@ -174,14 +174,29 @@ public class DataContext : IdentityDbContext<IdentityUser>
                 .HasColumnName("external_id")      
                 .HasMaxLength(1024);
 
-            entity.Property(e => e.StartTime)
-                .HasColumnName("start_time")
+            entity.Property(e => e.StartTimeUtc)
+                .HasColumnName("start_time_utc")
+                .HasColumnType("timestamp with time zone")
+                .IsRequired();
+
+            entity.Property(e => e.EndTimeUtc)
+                .HasColumnName("end_time_utc")
+                .HasColumnType("timestamp with time zone")
+                .IsRequired();
+
+            entity.Property(e => e.StartTimeLocal)
+                .HasColumnName("start_time_local")
                 .HasColumnType("timestamp without time zone")
                 .IsRequired();
 
-            entity.Property(e => e.EndTime)
-                .HasColumnName("end_time")
+            entity.Property(e => e.EndTimeLocal)
+                .HasColumnName("end_time_local")
                 .HasColumnType("timestamp without time zone")
+                .IsRequired();
+
+            entity.Property(e => e.TimeZone)
+                .HasColumnName("time_zone")
+                .HasColumnType("varchar(64)")
                 .IsRequired();
             
             entity.Property(e => e.ServiceId)

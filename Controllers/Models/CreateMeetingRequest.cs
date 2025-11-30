@@ -25,5 +25,7 @@ public class CreateMeetingRequest
     [Required]
     public DateTime EndTime { get; init; }
     
+    public string TimeZone { get; init; }
+    
     public long ServiceId { get; init; }
 }

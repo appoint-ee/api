@@ -1,6 +1,7 @@
 using api.Models;
 using api.Services;
 using api.Services.Dtos;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace api.Controllers;
@@ -20,6 +21,7 @@ public class SlotsController : ApiControllerBase
         _slotService = slotService ?? throw new ArgumentNullException(nameof(slotService));
     }
 
+    [AllowAnonymous]
     [HttpGet("time")] 
     public async Task<ActionResult<List<TimeSlot>>> GetTimeSlots([FromQuery] long userId, DateTime start, DateTime end)
     {
@@ -37,6 +39,7 @@ public class SlotsController : ApiControllerBase
         return Ok(timeSlots);
     }
     
+    [AllowAnonymous]
     [HttpGet("day")]
     public async Task<ActionResult<List<DaySlot>>> GetDaySlots([FromQuery] long userId, DateTime start, DateTime end)
     {

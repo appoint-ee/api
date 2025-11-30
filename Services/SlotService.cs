@@ -83,6 +83,8 @@ public class SlotService : ISlotService
 
     private static bool HasAnyMeetingWithinTimeRange(IList<GetMeetingResponse>? meetings, DateTime rangeStart, DateTime rangeEnd)
     {
+        rangeEnd = rangeEnd.AddTicks(-1);
+
         return meetings != null && meetings.Any(m 
             => rangeStart <= m.StartTime && m.StartTime <= rangeEnd        
                || rangeStart <= m.EndTime && m.EndTime <= rangeEnd  

@@ -55,15 +55,21 @@ public class MeetingService : IMeetingService
             throw new Exception("The selected host does not offer this service!");
         }
 
-        var startTimeUnspecified = DateTime.SpecifyKind(request.StartTime, DateTimeKind.Unspecified);
-        var endTimeUnspecified = DateTime.SpecifyKind(request.EndTime, DateTimeKind.Unspecified);
+        var timeZone = TimeZoneInfo.FindSystemTimeZoneById(request.TimeZone);
+        var startTimeLocal = DateTime.SpecifyKind(request.StartTime, DateTimeKind.Unspecified);
+        var endTimeLocal = DateTime.SpecifyKind(request.EndTime, DateTimeKind.Unspecified);
+        var startTimeUtc = TimeZoneInfo.ConvertTimeToUtc(startTimeLocal, timeZone);
+        var endTimeUtc = TimeZoneInfo.ConvertTimeToUtc(endTimeLocal, timeZone);
             
         var meeting = new Meeting()
         {
             Title = service.Name,
             Description = request.Description,
-            StartTime = startTimeUnspecified,
-            EndTime = endTimeUnspecified,
+            StartTimeUtc = startTimeUtc,
+            EndTimeUtc = endTimeUtc,
+            StartTimeLocal = startTimeLocal,
+            EndTimeLocal = endTimeLocal,
+            TimeZone = request.TimeZone,
             ServiceId = request.ServiceId,
             Duration = host.Duration,
             Price = host.Price,
@@ -107,8 +113,8 @@ public class MeetingService : IMeetingService
                 Title = m.Title,
                 Description = m.Description,
                 ServiceName = m.Service.Name,
-                StartTime = m.StartTime,
-                EndTime = m.EndTime,
+                StartTimeUtc = m.StartTimeUtc,
+                EndTimeUtc = m.EndTimeUtc,
                 Duration = m.Service.UserServices
                     .FirstOrDefault(us => us.UserId == m.Attendees
                         .FirstOrDefault(ma=> ma.IsHost)!.UserId)!.Duration,
@@ -135,9 +141,9 @@ public class MeetingService : IMeetingService
         var query = _dataContext.MeetingAttendees
             .Where(x => x.UserId == request.UserId)
             .Select(x => x.Meeting)
-            .Where(m => m.StartTime < request.StartDate && request.StartDate < m.EndTime
-                        || request.StartDate < m.StartTime && m.EndTime < request.EndDate
-                        || m.StartTime < request.EndDate && request.EndDate < m.EndTime);
+            .Where(m => m.StartTimeUtc < request.StartDate && request.StartDate < m.EndTimeUtc
+                        || request.StartDate < m.StartTimeUtc && m.EndTimeUtc < request.EndDate
+                        || m.StartTimeUtc < request.EndDate && request.EndDate < m.EndTimeUtc);
             
         if (request.ServiceId is { Count: > 0 })
         {
@@ -155,8 +161,8 @@ public class MeetingService : IMeetingService
                 Id = m.Id,
                 Title = m.Title,
                 Description = m.Description,
-                StartTime = m.StartTime,
-                EndTime = m.EndTime,
+                StartTime = m.StartTimeUtc,
+                EndTime = m.EndTimeUtc,
                 ServiceId = m.Service.Id,
                 ServiceName = m.Service.Name,
                 Duration = m.Duration,
@@ -186,8 +192,8 @@ public class MeetingService : IMeetingService
         if (request.StartTime.HasValue
             && request.EndTime.HasValue)
         {
-            meeting.StartTime = request.StartTime.Value;
-            meeting.EndTime = request.EndTime.Value;
+            meeting.StartTimeUtc = request.StartTime.Value;
+            meeting.EndTimeUtc = request.EndTime.Value;
         }
         
         if (request.Status.HasValue)
@@ -258,10 +264,10 @@ public class MeetingService : IMeetingService
         var meetings = _dataContext.MeetingAttendees
             .Where(x => x.UserId == userId)
             .Select(x => x.Meeting)
-            .Where(m => m.StartTime <= timeMin && timeMin <= m.EndTime
-                        || m.StartTime >= timeMin && timeMax >= m.EndTime
-                        || m.StartTime <= timeMax && timeMax <= m.EndTime
-                        || timeMin <= m.StartTime && m.EndTime <= timeMax)
+            .Where(m => m.StartTimeUtc <= timeMin && timeMin <= m.EndTimeUtc
+                        || m.StartTimeUtc >= timeMin && timeMax >= m.EndTimeUtc
+                        || m.StartTimeUtc <= timeMax && timeMax <= m.EndTimeUtc
+                        || timeMin <= m.StartTimeUtc && m.EndTimeUtc <= timeMax)
             .ToList();
 
         foreach (var googleEvent in googleEvents)
@@ -289,8 +295,8 @@ public class MeetingService : IMeetingService
                 meeting = new Meeting() 
                 {
                     Title = googleEvent.Summary, 
-                    StartTime = startTime!.Value, 
-                    EndTime = endTime!.Value, 
+                    StartTimeUtc = startTime!.Value,
+                    EndTimeUtc = endTime!.Value, 
                     ExternalId = googleEvent.Id, 
                     Description = googleEvent.Description ?? "", 
                     CreatedAt = DateTime.Now
@@ -311,12 +317,12 @@ public class MeetingService : IMeetingService
                 _dataContext.Meetings.Add(meeting); 
                 _dataContext.MeetingAttendees.AddRange(attendees);
             }
-            else if (meeting.StartTime != startTime!.Value 
-                    || meeting.EndTime != endTime!.Value
+            else if (meeting.StartTimeUtc != startTime!.Value
+                    || meeting.EndTimeUtc != endTime!.Value
                     || meeting.Title != googleEvent.Summary)
             {
-                meeting.StartTime = startTime!.Value; 
-                meeting.EndTime = endTime!.Value;
+                meeting.StartTimeUtc = startTime!.Value; 
+                meeting.EndTimeUtc = endTime!.Value;
                 meeting.Title = googleEvent.Summary; 
                 meeting.Description = googleEvent.Description;
             }

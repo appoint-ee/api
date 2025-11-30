@@ -17,10 +17,19 @@ public class Meeting // TODO: consider renaming as appointment
     public string? ExternalId { get; set; }
 
     [Required]
-    public DateTime StartTime { get; set; }
+    public DateTime StartTimeUtc { get; set; }
 
     [Required]
-    public DateTime EndTime { get; set; }
+    public DateTime EndTimeUtc { get; set; }
+
+    [Required]
+    public DateTime StartTimeLocal { get; set; }
+
+    [Required]
+    public DateTime EndTimeLocal { get; set; }
+
+    [Required, StringLength(64)]
+    public string TimeZone { get; set; }
     
     public long ServiceId { get; set; }
     
