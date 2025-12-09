@@ -56,11 +56,13 @@ public class MeetingService : IMeetingService
         }
 
         var timeZone = TimeZoneInfo.FindSystemTimeZoneById(request.TimeZone);
-        var startTimeLocal = DateTime.SpecifyKind(request.StartTime, DateTimeKind.Unspecified);
-        var endTimeLocal = DateTime.SpecifyKind(request.EndTime, DateTimeKind.Unspecified);
-        var startTimeUtc = TimeZoneInfo.ConvertTimeToUtc(startTimeLocal, timeZone);
-        var endTimeUtc = TimeZoneInfo.ConvertTimeToUtc(endTimeLocal, timeZone);
-            
+
+        var startTimeLocal = TimeZoneInfo.ConvertTime(request.StartTime, timeZone).DateTime;
+        var endTimeLocal = TimeZoneInfo.ConvertTime(request.EndTime, timeZone).DateTime.AddTicks(-1);
+
+        var startTimeUtc = request.StartTime.UtcDateTime;
+        var endTimeUtc = request.EndTime.UtcDateTime.AddTicks(-1);
+
         var meeting = new Meeting()
         {
             Title = service.Name,
@@ -138,12 +140,16 @@ public class MeetingService : IMeetingService
     {
         // await SyncWithGoogleCalendar(request.UserId); 
 
+        var hostTimeZone = TimeZoneInfo.FindSystemTimeZoneById(request.TimeZone);
+        var startUtc = TimeZoneInfo.ConvertTimeToUtc(request.StartDate, hostTimeZone);
+        var endUtc = TimeZoneInfo.ConvertTimeToUtc(request.EndDate, hostTimeZone);
+
         var query = _dataContext.MeetingAttendees
             .Where(x => x.UserId == request.UserId)
             .Select(x => x.Meeting)
-            .Where(m => m.StartTimeUtc < request.StartDate && request.StartDate < m.EndTimeUtc
-                        || request.StartDate < m.StartTimeUtc && m.EndTimeUtc < request.EndDate
-                        || m.StartTimeUtc < request.EndDate && request.EndDate < m.EndTimeUtc);
+            .Where(m => m.StartTimeUtc < startUtc && startUtc < m.EndTimeUtc
+                        || startUtc < m.StartTimeUtc && m.EndTimeUtc < endUtc
+                        || m.StartTimeUtc < endUtc && endUtc < m.EndTimeUtc);
             
         if (request.ServiceId is { Count: > 0 })
         {

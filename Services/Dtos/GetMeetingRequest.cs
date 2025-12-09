@@ -3,6 +3,7 @@ namespace api.Services.Dtos;
 public record GetMeetingRequest(
     DateTime StartDate,
     DateTime EndDate,
+    string TimeZone,
     string? Title,
     List<string>? Statuses,
     int? DurationMin,
@@ -14,6 +15,7 @@ public record GetMeetingRequest(
     public GetMeetingRequest() : this(
         DateTime.Now.AddMonths(-1),
         DateTime.Now,
+        null!,
         null,
         new List<string>(),
         null,

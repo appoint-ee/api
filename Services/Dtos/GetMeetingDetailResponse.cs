@@ -14,9 +14,9 @@ public class GetMeetingDetailResponse
     
     public decimal Price { get; set; }
 
-    public DateTime StartTimeUtc { get; init; }
+    public DateTimeOffset StartTimeUtc { get; init; }
 
-    public DateTime EndTimeUtc { get; init; }
+    public DateTimeOffset EndTimeUtc { get; init; }
     
     public ICollection<AttendeeDto> Attendees { get; set; }
 }

@@ -20,10 +20,10 @@ public class CreateMeetingRequest
     public string Description { get; init; }
     
     [Required]
-    public DateTime StartTime { get; init; }
+    public DateTimeOffset StartTime { get; init; }
 
     [Required]
-    public DateTime EndTime { get; init; }
+    public DateTimeOffset EndTime { get; init; }
     
     public string TimeZone { get; init; }
     
