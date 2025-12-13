@@ -19,8 +19,11 @@ public class Profile
     
     public string? Address { get; set; }
 
-    [StringLength(2)]
-    public string? CountryCode { get; set; }
+    [Required, StringLength(50)]
+    public string City { get; set; }
+    
+    [Required, StringLength(50)]
+    public string Country { get; set; }
 
     [StringLength(5)]
     public string? LangCode { get; set; }

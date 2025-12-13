@@ -285,9 +285,15 @@ public class DataContext : IdentityDbContext<IdentityUser>
             entity.Property(e => e.Address)
                 .HasColumnName("address");
             
-            entity.Property(e => e.CountryCode)
-                .HasColumnName("country_code")
-                .HasMaxLength(2);  
+            entity.Property(e => e.City)
+                .HasColumnName("city")
+                .IsRequired()
+                .HasMaxLength(50);
+            
+            entity.Property(e => e.Country)
+                .HasColumnName("country")
+                .IsRequired()
+                .HasMaxLength(50);
             
             entity.Property(e => e.LangCode)
                 .HasColumnName("lang_code")
@@ -340,7 +346,8 @@ public class DataContext : IdentityDbContext<IdentityUser>
                 .IsRequired()
                 .HasMaxLength(50); 
             
-            entity.HasIndex(u => u.EmailAddress).IsUnique();
+            entity.HasIndex(u => u.EmailAddress)
+                .IsUnique();
 
             entity.Property(u => u.EmailAddress)
                 .HasColumnName("email_address")
@@ -357,17 +364,14 @@ public class DataContext : IdentityDbContext<IdentityUser>
             
             entity.Property(e => e.City)
                 .HasColumnName("city")
-                .IsRequired()
                 .HasMaxLength(50);
             
             entity.Property(e => e.Country)
                 .HasColumnName("country")
-                .IsRequired()
                 .HasMaxLength(50);
             
             entity.Property(e => e.PhoneNumber)
                 .HasColumnName("phone_number")
-                .IsRequired()
                 .HasMaxLength(50);
             
             entity.Property(e => e.ProfileId)

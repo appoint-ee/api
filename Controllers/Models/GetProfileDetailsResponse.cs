@@ -14,7 +14,9 @@ public class GetProfileDetailsResponse
 
     public string Address { get; init; }
 
-    public string CountryCode { get; init; }
+    public string City { get; init; }
+    
+    public string Country { get; init; }
 
     public string LangCode { get; init; }
 
